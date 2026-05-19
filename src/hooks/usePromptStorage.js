@@ -14,7 +14,8 @@ export function usePromptStorage() {
   const [saved, setSaved] = useState(load);
 
   const save = useCallback((name, prompt) => {
-    const entry = { id: Date.now(), name: name || `Prompt #${Date.now()}`, prompt, createdAt: new Date().toISOString() };
+    const now = Date.now();
+    const entry = { id: now, name: name || `Prompt #${now}`, prompt, createdAt: new Date(now).toISOString() };
     setSaved(prev => {
       const next = [entry, ...prev].slice(0, 50);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));

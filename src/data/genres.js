@@ -12,6 +12,12 @@ export const GENRE_PRESETS = [
     tags: ['K-팝', '몽환적인', '숨결 섞인', '미니멀 프로덕션', '100 BPM'],
   },
   {
+    name: 'Y2K 팝',
+    emoji: '💿',
+    prompt: 'Y2K pop, bubblegum pop, early 2000s production, bright synths, glossy mix, female vocals, catchy hooks, maximalist, hyperpop influence',
+    tags: ['Y2K', '황홀한', '여성 보컬', '신스', '화려한 프로덕션'],
+  },
+  {
     name: '시티팝',
     emoji: '🌃',
     prompt: 'city pop, smooth jazz fusion, 80s Tokyo, funky bass, electric piano, lush chord progressions, breathy female vocals, warm analog',

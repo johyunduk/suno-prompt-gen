@@ -100,6 +100,7 @@ body {
 .btn-primary:hover { background: var(--gold2); transform: translateY(-2px); }
 .btn-outline { background: transparent; color: var(--white); border: 1px solid #444; }
 .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn--sm { padding: 0.6rem 1.2rem; font-size: 0.75rem; }
 
 /* NAV */
 nav {
@@ -294,6 +295,14 @@ nav::-webkit-scrollbar { display: none; }
 .output-section { display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid var(--border); padding-top: 1rem; }
 .output-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
 .output-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.output-area--preview {
+  font-size: 0.72rem;
+  color: #888;
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
 .output-area {
   background: #070707;
   border: 1px solid #1e1e1e;
@@ -503,6 +512,82 @@ nav::-webkit-scrollbar { display: none; }
   opacity: 0.3;
   margin: 2.5rem 0;
 }
+
+/* VOCAL CASTING */
+.vocal-casting { display: flex; flex-direction: column; gap: 0.8rem; width: 100%; }
+
+.vocal-casting-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vocal-add-btn {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.vocal-add-btn:hover { background: var(--gold); color: #000; }
+
+.vocal-empty {
+  font-size: 0.75rem;
+  color: #444;
+  font-family: 'Space Mono', monospace;
+  padding: 0.6rem 0;
+}
+
+.vocal-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.vocal-card {
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.vocal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vocal-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.vocal-remove {
+  background: none;
+  border: none;
+  color: #444;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.4rem;
+  transition: color 0.15s;
+}
+.vocal-remove:hover { color: var(--red); }
+
+.vocal-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+}
+@media (max-width: 500px) { .vocal-row { grid-template-columns: 1fr; } }
+
+.vocal-preview {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  color: #555;
+  border-top: 1px solid #1a1a1a;
+  padding-top: 0.6rem;
+  line-height: 1.5;
+}
+
+.vocal-output { margin-top: 0.4rem; }
 
 /* TWO COL */
 .two-col {

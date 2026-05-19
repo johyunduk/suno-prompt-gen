@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { METATAGS } from '../../data/metatags';
 
 export default function MetaTags() {
   const [search, setSearch] = useState('');
   const [copied, setCopied] = useState(null);
 
-  const filtered = METATAGS.filter(m =>
-    m.tag.toLowerCase().includes(search.toLowerCase()) ||
-    m.effect.includes(search) ||
-    m.desc.includes(search)
-  );
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return METATAGS.filter(m =>
+      m.tag.toLowerCase().includes(q) ||
+      m.effect.includes(search) ||
+      m.desc.includes(search)
+    );
+  }, [search]);
 
   const handleCopy = async (tag) => {
     await navigator.clipboard.writeText(tag);

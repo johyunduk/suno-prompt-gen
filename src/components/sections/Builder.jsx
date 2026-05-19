@@ -1,8 +1,23 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { TAG_GROUPS } from '../../data/tags';
 import { TEMPLATES, TEMPLATE_CATEGORIES } from '../../data/structures';
 import { usePromptStorage } from '../../hooks/usePromptStorage';
 import CopyButton from '../ui/CopyButton';
+import VocalCasting from '../VocalCasting';
+
+const FALLBACK_TEMPLATE_KEY = Object.keys(TEMPLATES)[0];
+
+const LANG_LABEL = {
+  ko: '한국어',
+  en: '영어',
+  mix: '한국어와 영어를 자연스럽게 혼용해서',
+};
+
+const LANG_OPTIONS = [
+  { value: 'ko', label: '한국어' },
+  { value: 'en', label: '영어' },
+  { value: 'mix', label: '한영 혼용' },
+];
 
 function encodeToURL(prompt) {
   const params = new URLSearchParams({ p: prompt });
@@ -10,8 +25,8 @@ function encodeToURL(prompt) {
 }
 
 function buildLyricsPrompt({ stylePrompt, theme, language, structure, extraNotes }) {
-  const lang = language === 'ko' ? '한국어' : language === 'en' ? '영어' : '한국어와 영어를 자연스럽게 혼용해서';
-  const structureText = TEMPLATES[structure]?.template || TEMPLATES.standard.template;
+  const lang = LANG_LABEL[language] ?? LANG_LABEL.ko;
+  const structureText = TEMPLATES[structure]?.template ?? TEMPLATES[FALLBACK_TEMPLATE_KEY].template;
 
   return `다음 조건에 맞는 노래 가사를 써줘.
 
@@ -36,22 +51,29 @@ ${extraNotes || '없음'}
 Suno AI에 바로 넣을 수 있는 형태로 완성해줘.`;
 }
 
+function firstKeyByCategory(cat) {
+  const entry = Object.entries(TEMPLATES).find(([, t]) => t.category === cat);
+  return entry?.[0] ?? FALLBACK_TEMPLATE_KEY;
+}
+
 export default function Builder() {
   const [selected, setSelected] = useState({});
   const [custom, setCustom] = useState('');
-  const [activeTemplate, setActiveTemplate] = useState('kpop_standard');
   const [saveName, setSaveName] = useState('');
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [shareMsg, setShareMsg] = useState('');
   const [expandedGroups, setExpandedGroups] = useState(
-    Object.fromEntries(TAG_GROUPS.map((g, i) => [g.id, i < 2]))
+    () => Object.fromEntries(TAG_GROUPS.map((g, i) => [g.id, i < 2]))
   );
   const [lyricsTheme, setLyricsTheme] = useState('');
   const [lyricsLang, setLyricsLang] = useState('ko');
   const [lyricsNotes, setLyricsNotes] = useState('');
-  const [lyricsStructure, setLyricsStructure] = useState('kpop_standard');
   const [lyricsCategory, setLyricsCategory] = useState('K-Pop');
-  const { saved, save, remove } = usePromptStorage();
+  const [lyricsStructure, setLyricsStructure] = useState(FALLBACK_TEMPLATE_KEY);
+  const [vocalPrompt, setVocalPrompt] = useState('');
+  const shareTimerRef = useRef(null);
+  const handleVocalChange = useCallback((p) => setVocalPrompt(p), []);
+  const { saved, save, remove, clear } = usePromptStorage();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -59,9 +81,13 @@ export default function Builder() {
     if (p) setCustom(p);
   }, []);
 
+  useEffect(() => () => clearTimeout(shareTimerRef.current), []);
+
+  const getGroupSelected = (groupId) => selected[groupId] ?? [];
+
   const toggleTag = (groupId, value) => {
     setSelected(prev => {
-      const group = prev[groupId] || [];
+      const group = prev[groupId] ?? [];
       const next = group.includes(value) ? group.filter(t => t !== value) : [...group, value];
       return { ...prev, [groupId]: next };
     });
@@ -72,12 +98,16 @@ export default function Builder() {
   };
 
   const prompt = useMemo(() => {
-    const values = TAG_GROUPS.flatMap(g => selected[g.id] || []);
+    const values = TAG_GROUPS.flatMap(g => selected[g.id] ?? []);
+    if (vocalPrompt) values.push(vocalPrompt);
     if (custom.trim()) values.push(custom.trim());
     return values.join(', ');
-  }, [selected, custom]);
+  }, [selected, custom, vocalPrompt]);
 
-  const totalSelected = Object.values(selected).flat().length;
+  const totalSelected = useMemo(
+    () => Object.values(selected).flat().length,
+    [selected]
+  );
 
   const lyricsPrompt = useMemo(() => buildLyricsPrompt({
     stylePrompt: prompt,
@@ -91,7 +121,8 @@ export default function Builder() {
     if (!prompt) return;
     await navigator.clipboard.writeText(encodeToURL(prompt));
     setShareMsg('URL 복사됨!');
-    setTimeout(() => setShareMsg(''), 2000);
+    clearTimeout(shareTimerRef.current);
+    shareTimerRef.current = setTimeout(() => setShareMsg(''), 2000);
   };
 
   const handleSave = () => {
@@ -99,6 +130,17 @@ export default function Builder() {
     save(saveName || `Prompt ${saved.length + 1}`, prompt);
     setSaveName('');
     setShowSaveInput(false);
+  };
+
+  const handleReset = () => {
+    setSelected({});
+    setCustom('');
+    clear();
+  };
+
+  const handleCategoryChange = (cat) => {
+    setLyricsCategory(cat);
+    setLyricsStructure(firstKeyByCategory(cat));
   };
 
   return (
@@ -111,7 +153,7 @@ export default function Builder() {
         <div className="prompt-header">
           <span>Style Prompt 생성기</span>
           {totalSelected > 0 && (
-            <button className="copy-btn" onClick={() => { setSelected({}); setCustom(''); }}>
+            <button className="copy-btn" onClick={handleReset}>
               전체 초기화
             </button>
           )}
@@ -123,8 +165,8 @@ export default function Builder() {
               <button className="group-header" onClick={() => toggleGroup(group.id)}>
                 <span className="field-label">{group.label}</span>
                 <span className="group-count">
-                  {(selected[group.id] || []).length > 0 && (
-                    <span className="group-badge">{(selected[group.id] || []).length}</span>
+                  {getGroupSelected(group.id).length > 0 && (
+                    <span className="group-badge">{getGroupSelected(group.id).length}</span>
                   )}
                   <span className="group-chevron">{expandedGroups[group.id] ? '▲' : '▼'}</span>
                 </span>
@@ -134,7 +176,7 @@ export default function Builder() {
                   {group.tags.map(tag => (
                     <button
                       key={tag.value}
-                      className={`tag ${(selected[group.id] || []).includes(tag.value) ? 'tag--selected' : ''}`}
+                      className={`tag ${getGroupSelected(group.id).includes(tag.value) ? 'tag--selected' : ''}`}
                       onClick={() => toggleTag(group.id, tag.value)}
                       title={tag.value}
                     >
@@ -145,6 +187,10 @@ export default function Builder() {
               )}
             </div>
           ))}
+
+          <div className="field-group">
+            <VocalCasting onChange={handleVocalChange} />
+          </div>
 
           <div className="field-group">
             <div className="field-label">직접 입력 추가</div>
@@ -181,9 +227,7 @@ export default function Builder() {
                   onKeyDown={e => e.key === 'Enter' && handleSave()}
                   autoFocus
                 />
-                <button className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.75rem' }} onClick={handleSave}>
-                  저장
-                </button>
+                <button className="btn btn-primary btn--sm" onClick={handleSave}>저장</button>
               </div>
             )}
           </div>
@@ -239,17 +283,13 @@ export default function Builder() {
             <div className="field-group">
               <div className="field-label">가사 언어</div>
               <div className="tag-row">
-                {[
-                  { value: 'ko', label: '한국어' },
-                  { value: 'en', label: '영어' },
-                  { value: 'mix', label: '한영 혼용' },
-                ].map(opt => (
+                {LANG_OPTIONS.map(({ value, label }) => (
                   <button
-                    key={opt.value}
-                    className={`tag ${lyricsLang === opt.value ? 'tag--selected' : ''}`}
-                    onClick={() => setLyricsLang(opt.value)}
+                    key={value}
+                    className={`tag ${lyricsLang === value ? 'tag--selected' : ''}`}
+                    onClick={() => setLyricsLang(value)}
                   >
-                    {opt.label}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -262,11 +302,7 @@ export default function Builder() {
                   <button
                     key={cat}
                     className={`tag ${lyricsCategory === cat ? 'tag--selected' : ''}`}
-                    onClick={() => {
-                      setLyricsCategory(cat);
-                      const first = Object.entries(TEMPLATES).find(([, t]) => t.category === cat);
-                      if (first) setLyricsStructure(first[0]);
-                    }}
+                    onClick={() => handleCategoryChange(cat)}
                   >
                     {cat}
                   </button>
@@ -304,39 +340,9 @@ export default function Builder() {
               <div className="field-label">Claude에게 줄 프롬프트 미리보기</div>
               <CopyButton text={lyricsPrompt} label="Claude 프롬프트 복사" />
             </div>
-            <div className="output-area" style={{ fontSize: '0.72rem', color: '#888', whiteSpace: 'pre-wrap', maxHeight: '320px', overflowY: 'auto' }}>
+            <div className="output-area output-area--preview">
               {lyricsPrompt}
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="divider" />
-
-      {/* ── Lyrics Template ── */}
-      <div className="section-label" style={{ marginBottom: '0.75rem' }}>가사 구조 템플릿만 보기</div>
-      <div className="prompt-box">
-        <div className="prompt-header">
-          <span>Lyric Structure Template</span>
-          <CopyButton text={TEMPLATES[activeTemplate]?.template} />
-        </div>
-        <div className="prompt-body">
-          <div className="field-group">
-            <div className="field-label">구조 선택</div>
-            <div className="tag-row">
-              {Object.entries(TEMPLATES).map(([key, { label }]) => (
-                <button
-                  key={key}
-                  className={`tag ${activeTemplate === key ? 'tag--selected' : ''}`}
-                  onClick={() => setActiveTemplate(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="output-area" style={{ fontSize: '0.72rem', color: '#888', whiteSpace: 'pre' }}>
-            {TEMPLATES[activeTemplate]?.template}
           </div>
         </div>
       </div>

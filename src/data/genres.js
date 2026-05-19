@@ -1,0 +1,98 @@
+export const GENRE_PRESETS = [
+  {
+    name: 'K-팝 뱅어',
+    emoji: '🇰🇷',
+    prompt: 'K-pop, synth-pop, bright production, 128bpm, female group vocals, catchy hooks, 4-on-the-floor beat, glossy mix',
+    tags: ['K-팝', '황홀한', '여성 보컬', '드럼 머신', '광택있는 믹스', '128 BPM'],
+  },
+  {
+    name: 'K-팝 4세대',
+    emoji: '✨',
+    prompt: 'K-pop, 4th generation, airy production, NewJeans-style, 100bpm, breathy female vocals, minimalist beats, Y2K aesthetic',
+    tags: ['K-팝', '몽환적인', '숨결 섞인', '미니멀 프로덕션', '100 BPM'],
+  },
+  {
+    name: '시티팝',
+    emoji: '🌃',
+    prompt: 'city pop, smooth jazz fusion, 80s Tokyo, funky bass, electric piano, lush chord progressions, breathy female vocals, warm analog',
+    tags: ['시티팝', '향수어린', '여성 보컬', '일렉 피아노', '따뜻한 아날로그'],
+  },
+  {
+    name: '힙합 / 트랩',
+    emoji: '🎤',
+    prompt: 'trap, dark hip-hop, 140bpm, 808 bass, hi-hat rolls, ominous synths, deep male rap vocals, heavy sub-bass, minimal',
+    tags: ['트랩', '어두운', '랩 플로우', '808 베이스', '서브베이스 강조', '140 BPM'],
+  },
+  {
+    name: '클라우드랩',
+    emoji: '☁️',
+    prompt: 'cloud rap, ethereal, dreamy production, pitched vocals, lush reverb, 130bpm, melodic rap, spacey synths, introspective',
+    tags: ['클라우드랩', '신비로운', '멜로딕 랩', '패드 신스', '리버브 강함', '130 BPM'],
+  },
+  {
+    name: '감성 발라드',
+    emoji: '🎹',
+    prompt: 'Korean ballad, piano-driven, emotional, 72bpm, soaring female vocals, lush strings, reverb, cinematic, heartfelt',
+    tags: ['팝발라드', '서글픈', '여성 보컬', '피아노', '현악기'],
+  },
+  {
+    name: '로파이 힙합',
+    emoji: '📻',
+    prompt: 'lo-fi hip-hop, vinyl crackle, dusty samples, mellow jazz chords, boom bap drums, 85bpm, hazy, introspective, no vocals',
+    tags: ['로파이', '차분한', '보컬 없음', '바이닐 크래클', '따뜻한 아날로그', '85 BPM'],
+  },
+  {
+    name: 'EDM / 퓨처베이스',
+    emoji: '🎛',
+    prompt: 'future bass, festival EDM, 150bpm, supersaws, euphoric drop, vocal chops, heavy sidechaining, bright leads, massive reverb',
+    tags: ['퓨처베이스', '황홀한', '신스', '사이드체인', '리버브 강함', '150 BPM'],
+  },
+  {
+    name: '딥 하우스',
+    emoji: '🏠',
+    prompt: 'deep house, 124bpm, four-on-the-floor, soulful vocal samples, warm bass, Chicago house influence, classic feel',
+    tags: ['하우스', '차분한', '레이어드 보컬', '일렉 베이스', '따뜻한 아날로그'],
+  },
+  {
+    name: '네오소울 / R&B',
+    emoji: '🎷',
+    prompt: 'neo-soul, R&B, smooth, 95bpm, Rhodes piano, lush harmonies, falsetto, funky bass, silky production, jazz chords',
+    tags: ['네오소울', '낭만적인', '팔세토', '로즈 피아노', '일렉 베이스', '95 BPM'],
+  },
+  {
+    name: '인디포크',
+    emoji: '🌲',
+    prompt: 'indie folk, fingerpicked acoustic guitar, warm, intimate, 95bpm, gentle male vocals, subtle strings, organic drums',
+    tags: ['인디포크', '향수어린', '남성 보컬', '핑거피킹 기타', '따뜻한 아날로그'],
+  },
+  {
+    name: '슈게이징',
+    emoji: '🌫',
+    prompt: 'shoegaze, dreamy, wall of sound, heavy distortion, reverb-heavy, 110bpm, breathy male vocals, feedback guitar, ethereal',
+    tags: ['슈게이징', '몽환적인', '숨결 섞인', '일렉 기타', '강한 디스토션'],
+  },
+  {
+    name: '재즈',
+    emoji: '🎺',
+    prompt: 'jazz, late night, smoky, 90bpm, upright bass, brushed drums, piano trio, saxophone, improvised feel',
+    tags: ['재즈', '미스터리한', '보컬 없음', '색소폰', '피아노', '90 BPM'],
+  },
+  {
+    name: '포스트록',
+    emoji: '🏔',
+    prompt: 'post-rock, cinematic, build-up, 100bpm, clean guitar to heavy distortion, no vocals, epic, orchestral elements, emotional',
+    tags: ['포스트록', '영화적인', '보컬 없음', '일렉 기타', '강한 디스토션'],
+  },
+  {
+    name: '아프로비트',
+    emoji: '🌍',
+    prompt: 'afrobeats, afropop, 100bpm, percussive, groovy bass, call and response vocals, tropical, danceable, warm production',
+    tags: ['아프로비트', '고양되는', '남성 보컬', '일렉 베이스', '따뜻한 아날로그'],
+  },
+  {
+    name: '오케스트라 / 영화음악',
+    emoji: '🎻',
+    prompt: 'cinematic orchestral, epic, 80bpm, full strings, brass ensemble, dramatic, Hans Zimmer-style, no vocals, emotional build',
+    tags: ['오케스트라', '영화적인', '보컬 없음', '현악기', '브라스'],
+  },
+];

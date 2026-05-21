@@ -1,9 +1,29 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { TAG_GROUPS } from '../../data/tags';
 import { TEMPLATES, TEMPLATE_CATEGORIES } from '../../data/structures';
+import { STYLE_PRESETS } from '../../data/presets';
 import { usePromptStorage } from '../../hooks/usePromptStorage';
 import CopyButton from '../ui/CopyButton';
 import VocalCasting from '../VocalCasting';
+
+function pickRandom(arr, min, max) {
+  const n = min + Math.floor(Math.random() * (max - min + 1));
+  return [...arr].sort(() => Math.random() - 0.5).slice(0, Math.min(n, arr.length));
+}
+
+function generateRandomTags() {
+  const byId = Object.fromEntries(TAG_GROUPS.map(g => [g.id, g.tags.map(t => t.value)]));
+  const result = {};
+  result.genre = pickRandom(byId.genre, 1, 2);
+  result.mood = pickRandom(byId.mood, 1, 2);
+  result.vocal_arrangement = pickRandom(byId.vocal_arrangement, 1, 1);
+  if (Math.random() > 0.4) result.vocal_style = pickRandom(byId.vocal_style, 1, 1);
+  result.instrument = pickRandom(byId.instrument, 1, 3);
+  if (Math.random() > 0.35) result.production = pickRandom(byId.production, 1, 2);
+  if (Math.random() > 0.5) result.era = pickRandom(byId.era, 1, 1);
+  if (Math.random() > 0.5) result.tempo = pickRandom(byId.tempo, 1, 1);
+  return result;
+}
 
 const FALLBACK_TEMPLATE_KEY = Object.keys(TEMPLATES)[0];
 
@@ -45,6 +65,12 @@ ${structureText}
 ## 추가 요청
 ${extraNotes || '없음'}
 
+## 길이 제한 (반드시 지켜줘)
+- 완성된 곡이 **3분을 넘지 않도록** 가사 분량을 조절해줘
+- 각 섹션(Verse, Chorus 등)은 **4줄 이내**로 작성해줘
+- Outro는 **2줄 이내**로 짧게 마무리해줘
+- 반복 섹션([Chorus] 등)은 가사를 다시 쓰지 말고 구조 태그만 남겨줘
+
 ---
 위 구조 그대로 [Verse 1], [Chorus] 등 메타태그를 유지하면서 가사를 채워줘.
 각 섹션의 분위기와 에너지가 자연스럽게 흐르도록 해줘.
@@ -56,8 +82,20 @@ function firstKeyByCategory(cat) {
   return entry?.[0] ?? FALLBACK_TEMPLATE_KEY;
 }
 
+const PRESET_USAGE_KEY = 'suno_preset_usage';
+
+function loadPresetUsage() {
+  try { return JSON.parse(localStorage.getItem(PRESET_USAGE_KEY) || '{}'); } catch { return {}; }
+}
+
+function sortPresetsByUsage(presets, usage) {
+  return [...presets].sort((a, b) => (usage[b.id] ?? 0) - (usage[a.id] ?? 0));
+}
+
 export default function Builder() {
   const [selected, setSelected] = useState({});
+  const [activePreset, setActivePreset] = useState(null);
+  const [presetUsage, setPresetUsage] = useState(loadPresetUsage);
   const [custom, setCustom] = useState('');
   const [saveName, setSaveName] = useState('');
   const [showSaveInput, setShowSaveInput] = useState(false);
@@ -86,6 +124,7 @@ export default function Builder() {
   const getGroupSelected = (groupId) => selected[groupId] ?? [];
 
   const toggleTag = (groupId, value) => {
+    setActivePreset(null);
     setSelected(prev => {
       const group = prev[groupId] ?? [];
       const next = group.includes(value) ? group.filter(t => t !== value) : [...group, value];
@@ -146,9 +185,42 @@ export default function Builder() {
     setShowSaveInput(false);
   };
 
+  const applyPreset = useCallback((preset) => {
+    setSelected(preset.tags);
+    setActivePreset(preset.id);
+    setCustom('');
+    setExpandedGroups(prev => {
+      const updated = { ...prev };
+      Object.keys(preset.tags).forEach(id => { updated[id] = true; });
+      return updated;
+    });
+    if (preset.structure && TEMPLATES[preset.structure]) {
+      const cat = TEMPLATES[preset.structure].category;
+      setLyricsCategory(cat);
+      setLyricsStructure(preset.structure);
+    }
+    setPresetUsage(prev => {
+      const next = { ...prev, [preset.id]: (prev[preset.id] ?? 0) + 1 };
+      localStorage.setItem(PRESET_USAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const sortedPresets = useMemo(
+    () => sortPresetsByUsage(STYLE_PRESETS, presetUsage),
+    [presetUsage]
+  );
+
+  const handleRandom = useCallback(() => {
+    setSelected(generateRandomTags());
+    setActivePreset(null);
+    setExpandedGroups(Object.fromEntries(TAG_GROUPS.map(g => [g.id, true])));
+  }, []);
+
   const handleReset = () => {
     setSelected({});
     setCustom('');
+    setActivePreset(null);
     clear();
   };
 
@@ -166,11 +238,39 @@ export default function Builder() {
       <div className="prompt-box">
         <div className="prompt-header">
           <span>Style Prompt 생성기</span>
-          {totalSelected > 0 && (
-            <button className="copy-btn" onClick={handleReset}>
-              전체 초기화
-            </button>
-          )}
+          <div className="prompt-header-actions">
+            <button className="copy-btn" onClick={handleRandom}>🎲 랜덤 생성</button>
+            {totalSelected > 0 && (
+              <button className="copy-btn" onClick={handleReset}>전체 초기화</button>
+            )}
+          </div>
+        </div>
+
+        {/* ── Presets ── */}
+        <div className="preset-section">
+          <div className="preset-section-header">
+            <span className="field-label">스타일 프리셋</span>
+            {activePreset && (
+              <span className="preset-active-label">
+                {STYLE_PRESETS.find(p => p.id === activePreset)?.emoji}{' '}
+                {STYLE_PRESETS.find(p => p.id === activePreset)?.label} 적용 중
+              </span>
+            )}
+          </div>
+          <div className="preset-scroll">
+            {sortedPresets.map(preset => (
+              <button
+                key={preset.id}
+                className={`preset-card ${activePreset === preset.id ? 'preset-card--active' : ''}`}
+                onClick={() => applyPreset(preset)}
+                title={preset.desc}
+              >
+                <span className="preset-emoji">{preset.emoji}</span>
+                <span className="preset-label">{preset.label}</span>
+                <span className="preset-desc">{preset.desc}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="prompt-body">

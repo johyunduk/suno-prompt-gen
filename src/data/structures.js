@@ -1,3 +1,18 @@
+const SHORT_TEMPLATE = `[Verse 1]
+(가사 작성)
+
+[Chorus]
+(가사 작성)
+
+[Verse 2]
+(가사 작성)
+
+[Chorus]
+(가사 작성)
+
+[Outro]
+(짧게 마무리)`;
+
 export const TEMPLATES = {
   // ── K-Pop ──────────────────────────────────────
   kpop_standard: {
@@ -163,6 +178,13 @@ export const TEMPLATES = {
 (여운 있게 마무리)`,
   },
 
+  kpop_short: {
+    label: 'K-팝 숏 (~2분)',
+    category: 'K-Pop',
+    desc: '벌스-코러스 2회 + 짧은 아웃트로. 2분 이내 완성형.',
+    template: SHORT_TEMPLATE,
+  },
+
   // ── 팝 ──────────────────────────────────────────
   pop_standard: {
     label: '팝 기본',
@@ -243,6 +265,13 @@ export const TEMPLATES = {
 
 [Outro]
 (마무리)`,
+  },
+
+  pop_short: {
+    label: '팝 숏 (~2분)',
+    category: '팝',
+    desc: '군더더기 없는 2분 팝. 코러스 2회로 빠르게 끝내는 구조.',
+    template: SHORT_TEMPLATE,
   },
 
   // ── 힙합 / R&B ──────────────────────────────────
@@ -339,6 +368,26 @@ export const TEMPLATES = {
 (여운 있게)`,
   },
 
+  hiphop_short: {
+    label: '힙합 숏 (~2분)',
+    category: '힙합/R&B',
+    desc: '벌스 2개 + 후크 2회. 2분 안에 핵심만.',
+    template: `[Verse 1]
+(16바 랩)
+
+[Hook]
+(짧은 후크)
+
+[Verse 2]
+(16바 랩)
+
+[Hook]
+(후크)
+
+[Outro]
+(마무리)`,
+  },
+
   // ── EDM ─────────────────────────────────────────
   edm: {
     label: 'EDM / 하우스',
@@ -401,6 +450,23 @@ export const TEMPLATES = {
 (페이드 아웃)`,
   },
 
+  edm_short: {
+    label: 'EDM 숏 (~2분)',
+    category: 'EDM',
+    desc: '빌드업-드랍 1회 구조. 2분 EDM 클립.',
+    template: `[Intro]
+(분위기 형성)
+
+[Build]
+(긴장감 상승)
+
+[Drop]
+(메인 드랍)
+
+[Outro]
+(마무리)`,
+  },
+
   // ── 발라드 ──────────────────────────────────────
   ballad: {
     label: '발라드',
@@ -429,6 +495,234 @@ export const TEMPLATES = {
 
 [Outro]
 (여운 있게 페이드 아웃)`,
+  },
+
+  ballad_short: {
+    label: '발라드 숏 (~2분)',
+    category: '발라드',
+    desc: '절제된 감동. 벌스-코러스 2회로 2분 안에 완성.',
+    template: `[Verse 1]
+(조용하게 시작)
+
+[Chorus]
+(감정 폭발)
+
+[Verse 2]
+(가사 작성)
+
+[Chorus]
+(가사 작성)
+
+[Outro]
+(여운 있게 마무리)`,
+  },
+
+  // ── 듀엣 ────────────────────────────────────────
+  duet_vv_ab: {
+    label: '보컬A → 보컬B',
+    category: '듀엣',
+    desc: '두 보컬이 각자 벌스를 맡고 코러스는 함께. A가 먼저 시작.',
+    template: `[Verse 1 - Vocalist A]
+(A의 시점으로 이야기 시작)
+
+[Pre-Chorus - Both]
+(함께 긴장감 쌓기)
+
+[Chorus - Both]
+(함께 부르는 후크)
+
+[Verse 2 - Vocalist B]
+(B의 시점으로 이야기 전개)
+
+[Pre-Chorus - Both]
+(가사 작성)
+
+[Chorus - Both]
+(가사 작성)
+
+[Bridge - Vocalist A]
+(A의 감정 전환)
+
+[Bridge - Vocalist B]
+(B의 응답)
+
+[Chorus - Both]
+(마지막 코러스 - 함께)
+
+[Outro - Both]
+(마무리)`,
+  },
+
+  duet_vv_ba: {
+    label: '보컬B → 보컬A',
+    category: '듀엣',
+    desc: '두 보컬이 각자 벌스를 맡고 코러스는 함께. B가 먼저 시작.',
+    template: `[Verse 1 - Vocalist B]
+(B의 시점으로 이야기 시작)
+
+[Pre-Chorus - Both]
+(함께 긴장감 쌓기)
+
+[Chorus - Both]
+(함께 부르는 후크)
+
+[Verse 2 - Vocalist A]
+(A의 시점으로 이야기 전개)
+
+[Pre-Chorus - Both]
+(가사 작성)
+
+[Chorus - Both]
+(가사 작성)
+
+[Bridge - Vocalist B]
+(B의 감정 전환)
+
+[Bridge - Vocalist A]
+(A의 응답)
+
+[Chorus - Both]
+(마지막 코러스 - 함께)
+
+[Outro - Both]
+(마무리)`,
+  },
+
+  duet_vr_vocal_first: {
+    label: '보컬 선행 + 랩',
+    category: '듀엣',
+    desc: '보컬이 벌스 1을 노래하고, 랩퍼가 벌스 2를 랩. 코러스는 함께.',
+    template: `[Verse 1 - Vocalist]
+(보컬이 감성적으로 시작)
+
+[Pre-Chorus - Both]
+(함께 빌드업)
+
+[Chorus - Both]
+(함께 부르는 후크)
+
+[Verse 2 - Rapper]
+(랩퍼의 16바 랩)
+
+[Chorus - Both]
+(가사 작성)
+
+[Verse 3 - Vocalist]
+(보컬의 마지막 벌스)
+
+[Rap Bridge - Rapper]
+(랩퍼의 브릿지 랩)
+
+[Chorus - Both]
+(마지막 코러스)
+
+[Outro - Vocalist]
+(보컬로 마무리)`,
+  },
+
+  duet_vr_rap_first: {
+    label: '랩 선행 + 보컬',
+    category: '듀엣',
+    desc: '랩퍼가 벌스 1로 시작하고, 보컬이 벌스 2를 노래. 코러스는 함께.',
+    template: `[Verse 1 - Rapper]
+(랩퍼가 강렬하게 시작 - 16바)
+
+[Pre-Chorus - Both]
+(함께 빌드업)
+
+[Chorus - Both]
+(함께 부르는 후크)
+
+[Verse 2 - Vocalist]
+(보컬이 감성적으로 이어받기)
+
+[Chorus - Both]
+(가사 작성)
+
+[Verse 3 - Rapper]
+(랩퍼의 두 번째 랩)
+
+[Bridge - Vocalist]
+(보컬 브릿지 - 감정 고조)
+
+[Chorus - Both]
+(마지막 코러스)
+
+[Outro - Rapper]
+(랩으로 마무리)`,
+  },
+
+  duet_call_response: {
+    label: '콜앤리스폰스',
+    category: '듀엣',
+    desc: '두 보컬이 한 절씩 교대로 주고받는 대화형 구조.',
+    template: `[Intro - Both]
+(함께 오프닝)
+
+[Verse 1A - Vocalist A]
+(A의 첫 번째 라인)
+
+[Verse 1B - Vocalist B]
+(B의 응답 라인)
+
+[Chorus - Both]
+(함께 후크)
+
+[Verse 2A - Vocalist B]
+(이번엔 B가 먼저)
+
+[Verse 2B - Vocalist A]
+(A의 응답)
+
+[Chorus - Both]
+(가사 작성)
+
+[Bridge - Vocalist A]
+(A 단독 감정 폭발)
+
+[Bridge - Vocalist B]
+(B 단독 응답)
+
+[Final Chorus - Both]
+(함께 - 가장 강렬하게)
+
+[Outro - Both]
+(함께 마무리)`,
+  },
+
+  duet_kpop_feature: {
+    label: 'K-팝 피처링',
+    category: '듀엣',
+    desc: '메인 아티스트 + 피처링 구조. 피처링이 브릿지/랩 파트 담당.',
+    template: `[Intro - Main]
+(메인 보컬 인트로)
+
+[Verse 1 - Main]
+(메인 보컬 벌스)
+
+[Pre-Chorus - Main]
+(가사 작성)
+
+[Chorus - Main]
+(메인 훅)
+
+[Verse 2 - Feature]
+(피처링 아티스트 파트)
+
+[Pre-Chorus - Both]
+(함께 빌드업)
+
+[Chorus - Both]
+(함께 코러스)
+
+[Bridge - Feature]
+(피처링의 랩 또는 보컬 브릿지)
+
+[Chorus - Both]
+(마지막 코러스 - 함께)
+
+[Outro - Main]
+(메인 보컬 마무리)`,
   },
 
   // ── 기타 ────────────────────────────────────────
@@ -497,4 +791,4 @@ export const TEMPLATES = {
   },
 };
 
-export const TEMPLATE_CATEGORIES = ['K-Pop', '팝', '힙합/R&B', 'EDM', '발라드', '기타'];
+export const TEMPLATE_CATEGORIES = ['K-Pop', '팝', '힙합/R&B', 'EDM', '발라드', '듀엣', '기타'];

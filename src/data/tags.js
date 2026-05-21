@@ -291,4 +291,17 @@ export const TAG_GROUPS = [
       { label: 'Nujabes 스타일', value: 'inspired by Nujabes' },
     ],
   },
+  {
+    id: 'duration',
+    label: '곡 길이',
+    tags: [
+      { label: '~1분', value: 'very short song, about 1 minute' },
+      { label: '~1분 30초', value: 'short song, about 1 minute 30 seconds' },
+      { label: '~2분', value: 'short song, about 2 minutes' },
+      { label: '~2분 30초', value: 'song about 2 minutes 30 seconds' },
+      { label: '~3분', value: 'song about 3 minutes' },
+      { label: '~3분 30초', value: 'song about 3 minutes 30 seconds' },
+      { label: '~4분+', value: 'long song, over 4 minutes' },
+    ],
+  },
 ];

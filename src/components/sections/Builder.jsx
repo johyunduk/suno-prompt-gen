@@ -93,6 +93,20 @@ export default function Builder() {
     });
   };
 
+  const isGroupAllSelected = (groupId, tags) => {
+    const sel = getGroupSelected(groupId);
+    return tags.length > 0 && tags.every(t => sel.includes(t.value));
+  };
+
+  const toggleSelectAll = (groupId, tags) => {
+    setSelected(prev => {
+      const allValues = tags.map(t => t.value);
+      const sel = prev[groupId] ?? [];
+      const allSelected = tags.length > 0 && tags.every(t => sel.includes(t.value));
+      return { ...prev, [groupId]: allSelected ? [] : allValues };
+    });
+  };
+
   const toggleGroup = (id) => {
     setExpandedGroups(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -160,17 +174,27 @@ export default function Builder() {
         </div>
 
         <div className="prompt-body">
-          {TAG_GROUPS.map(group => (
+          {TAG_GROUPS.map(group => {
+            const allSelected = isGroupAllSelected(group.id, group.tags);
+            return (
             <div key={group.id} className="field-group">
-              <button className="group-header" onClick={() => toggleGroup(group.id)}>
-                <span className="field-label">{group.label}</span>
-                <span className="group-count">
-                  {getGroupSelected(group.id).length > 0 && (
-                    <span className="group-badge">{getGroupSelected(group.id).length}</span>
-                  )}
-                  <span className="group-chevron">{expandedGroups[group.id] ? '▲' : '▼'}</span>
-                </span>
-              </button>
+              <div className="group-header-row">
+                <button className="group-header" onClick={() => toggleGroup(group.id)}>
+                  <span className="field-label">{group.label}</span>
+                  <span className="group-count">
+                    {getGroupSelected(group.id).length > 0 && (
+                      <span className="group-badge">{getGroupSelected(group.id).length}</span>
+                    )}
+                    <span className="group-chevron">{expandedGroups[group.id] ? '▲' : '▼'}</span>
+                  </span>
+                </button>
+                <button
+                  className={`tag-select-all-btn ${allSelected ? 'tag-select-all-btn--active' : ''}`}
+                  onClick={() => toggleSelectAll(group.id, group.tags)}
+                >
+                  {allSelected ? '전체 해제' : '전체 선택'}
+                </button>
+              </div>
               {expandedGroups[group.id] && (
                 <div className="tag-row">
                   {group.tags.map(tag => (
@@ -186,7 +210,7 @@ export default function Builder() {
                 </div>
               )}
             </div>
-          ))}
+          );})}
 
           <div className="field-group">
             <VocalCasting onChange={handleVocalChange} />
@@ -212,7 +236,6 @@ export default function Builder() {
               <div className="output-actions">
                 <button className="copy-btn" onClick={handleShare}>{shareMsg || '🔗 URL 공유'}</button>
                 <button className="copy-btn" onClick={() => setShowSaveInput(v => !v)}>💾 저장</button>
-                <CopyButton text={prompt} />
               </div>
             </div>
             <div className="output-area">{prompt || '태그를 선택하면 프롬프트가 자동 생성됩니다.'}</div>
@@ -230,6 +253,7 @@ export default function Builder() {
                 <button className="btn btn-primary btn--sm" onClick={handleSave}>저장</button>
               </div>
             )}
+            <CopyButton text={prompt} label="Suno 프롬프트 복사" className="copy-btn--primary" />
           </div>
         </div>
       </div>
@@ -338,11 +362,11 @@ export default function Builder() {
           <div className="output-section">
             <div className="output-header">
               <div className="field-label">Claude에게 줄 프롬프트 미리보기</div>
-              <CopyButton text={lyricsPrompt} label="Claude 프롬프트 복사" />
             </div>
             <div className="output-area output-area--preview">
               {lyricsPrompt}
             </div>
+            <CopyButton text={lyricsPrompt} label="Claude 가사 프롬프트 복사" className="copy-btn--primary" />
           </div>
         </div>
       </div>

@@ -66,15 +66,24 @@ ${structureText}
 ${extraNotes || '없음'}
 
 ## 길이 제한 (반드시 지켜줘)
-- 완성된 곡이 **3분을 넘지 않도록** 가사 분량을 조절해줘
-- 각 섹션(Verse, Chorus 등)은 **4줄 이내**로 작성해줘
-- Outro는 **2줄 이내**로 짧게 마무리해줘
+- 완성된 곡이 **2분 30초~3분** 사이가 되도록 가사 분량을 조절해줘
+- 각 섹션(Verse, Chorus 등)은 **4~6줄**로 작성해줘
+- Outro는 **2~3줄**로 마무리해줘
 - 반복 섹션([Chorus] 등)은 가사를 다시 쓰지 말고 구조 태그만 남겨줘
 
 ---
 위 구조 그대로 [Verse 1], [Chorus] 등 메타태그를 유지하면서 가사를 채워줘.
 각 섹션의 분위기와 에너지가 자연스럽게 흐르도록 해줘.
-Suno AI에 바로 넣을 수 있는 형태로 완성해줘.`;
+Suno AI에 바로 넣을 수 있는 형태로 완성해줘.
+
+가사 출력이 끝나면 마지막에 아래 형식으로 Suno Style Prompt도 출력해줘:
+
+---
+🎵 Suno Style Prompt (Suno에 그대로 복사해서 붙여넣으세요)
+\`\`\`
+${stylePrompt || '(스타일 프롬프트 없음)'}
+\`\`\`
+`;
 }
 
 function firstKeyByCategory(cat) {
@@ -353,7 +362,7 @@ export default function Builder() {
                 <button className="btn btn-primary btn--sm" onClick={handleSave}>저장</button>
               </div>
             )}
-            <CopyButton text={prompt} label="Suno 프롬프트 복사" className="copy-btn--primary" />
+            <CopyButton text={prompt} label="Suno에 붙여넣을 Style Prompt 복사" className="copy-btn--primary" />
           </div>
         </div>
       </div>

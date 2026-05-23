@@ -58,7 +58,7 @@ export default async function handler(req, res) {
           { inline_data: { mime_type: mimeType, data: imageData } },
         ],
       }],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 512 },
+      generationConfig: { temperature: 0.4, maxOutputTokens: 512, responseMimeType: 'application/json' },
     }),
   });
 
@@ -71,7 +71,8 @@ export default async function handler(req, res) {
 
   let tags;
   try {
-    tags = JSON.parse(raw);
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    tags = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
   } catch {
     return res.status(500).json({ error: 'Gemini 응답 파싱 실패', raw });
   }

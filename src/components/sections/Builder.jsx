@@ -77,14 +77,7 @@ ${extraNotes || '없음'}
 위 구조 그대로 [Verse 1], [Chorus] 등 메타태그를 유지하면서 가사를 채워줘.
 각 섹션의 분위기와 에너지가 자연스럽게 흐르도록 해줘.
 Suno AI에 바로 넣을 수 있는 형태로 완성해줘.
-
-가사 출력이 끝나면 마지막에 아래 형식으로 Suno Style Prompt도 출력해줘:
-
----
-🎵 Suno Style Prompt (Suno에 그대로 복사해서 붙여넣으세요)
-\`\`\`
-${stylePrompt || '(스타일 프롬프트 없음)'}
-\`\`\`
+가사만 출력해줘. 설명이나 부가 텍스트 없이.
 `;
 }
 
@@ -624,12 +617,21 @@ export default function Builder() {
         <div className="prompt-box" style={{ marginTop: '1.5rem' }}>
           <div className="prompt-header">
             <span>생성된 가사</span>
-            {generatedLyrics && <CopyButton text={generatedLyrics} label="전체 복사" />}
+            {generatedLyrics && <CopyButton text={generatedLyrics} label="가사 복사" />}
           </div>
           <div className="prompt-body">
             <div className="output-area output-area--lyrics">
               {loading ? '가사를 생성하고 있습니다...' : generatedLyrics}
             </div>
+            {generatedLyrics && prompt && (
+              <div className="output-section" style={{ marginTop: '0.5rem' }}>
+                <div className="output-header">
+                  <div className="field-label">Suno Style Prompt</div>
+                </div>
+                <div className="output-area">{prompt}</div>
+                <CopyButton text={prompt} label="Style Prompt 복사" className="copy-btn--primary" />
+              </div>
+            )}
           </div>
         </div>
       )}

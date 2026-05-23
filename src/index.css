@@ -757,3 +757,4 @@ nav::-webkit-scrollbar { display: none; }
 .suggested-tag-values { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .suggested-tag-chip { background: #1a1300; border: 1px solid var(--gold); color: var(--gold); font-size: 0.68rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Space Mono', monospace; }
 .style-prompt-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.prompt-preview-toggle { background: none; border: none; cursor: pointer; text-align: left; }

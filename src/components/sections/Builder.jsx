@@ -120,6 +120,7 @@ export default function Builder() {
   const [lyricsStructure, setLyricsStructure] = useState(FALLBACK_TEMPLATE_KEY);
   const [vocalPrompt, setVocalPrompt] = useState('');
   const [generatedLyrics, setGeneratedLyrics] = useState('');
+  const [showPromptPreview, setShowPromptPreview] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [suggestedTags, setSuggestedTags] = useState(null);
@@ -591,11 +592,18 @@ export default function Builder() {
 
           <div className="output-section">
             <div className="output-header">
-              <div className="field-label">프롬프트 미리보기</div>
+              <button
+                className="field-label prompt-preview-toggle"
+                onClick={() => setShowPromptPreview(v => !v)}
+              >
+                프롬프트 미리보기 {showPromptPreview ? '▲' : '▼'}
+              </button>
             </div>
-            <div className="output-area output-area--preview">
-              {lyricsPrompt}
-            </div>
+            {showPromptPreview && (
+              <div className="output-area output-area--preview">
+                {lyricsPrompt}
+              </div>
+            )}
             <div className="lyrics-actions">
               <button
                 className="btn btn-primary"

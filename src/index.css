@@ -756,3 +756,4 @@ nav::-webkit-scrollbar { display: none; }
 .suggested-tag-group-name { font-size: 0.65rem; font-family: 'Space Mono', monospace; color: #555; min-width: 100px; padding-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .suggested-tag-values { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .suggested-tag-chip { background: #1a1300; border: 1px solid var(--gold); color: var(--gold); font-size: 0.68rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Space Mono', monospace; }
+.style-prompt-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }

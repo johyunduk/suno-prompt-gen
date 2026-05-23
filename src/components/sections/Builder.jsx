@@ -482,7 +482,16 @@ export default function Builder() {
                 <button className="btn btn-primary btn--sm" onClick={handleSave}>저장</button>
               </div>
             )}
-            <CopyButton text={prompt} label="Suno에 붙여넣을 Style Prompt 복사" className="copy-btn--primary" />
+            <div className="style-prompt-actions">
+              <button
+                className="btn btn-primary"
+                onClick={handleGenerate}
+                disabled={loading || !prompt}
+              >
+                {loading ? '⏳ 가사 생성 중...' : '✨ 가사 바로 생성'}
+              </button>
+              <CopyButton text={prompt} label="Style Prompt 복사" />
+            </div>
           </div>
         </div>
       </div>
@@ -602,7 +611,6 @@ export default function Builder() {
               >
                 {loading ? '⏳ 생성 중...' : '✨ 가사 생성'}
               </button>
-              <CopyButton text={lyricsPrompt} label="프롬프트 복사" className="copy-btn--primary" />
             </div>
           </div>
         </div>

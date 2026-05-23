@@ -1,6 +1,5 @@
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent';
 
-// 유효한 태그 값 목록 (tags.js와 동기화)
 const VALID = {
   genre: ['K-Pop','J-Pop','Pop','Synth-Pop','Electropop','Dark Pop','Indie Pop','Indie Rock','Dream Pop','Shoegaze','City Pop','Y2K pop','Vaporwave','Hip-Hop','Trap','Drill','Boom Bap','Cloud Rap','R&B','Neo Soul','Soul','Funk','EDM','House','Techno','Trance','Future Bass','Dubstep','Drum & Bass','Lo-Fi','Chillwave','Ambient','Jazz','Nu Jazz','Jazz Fusion','Rock','Alternative Rock','Post-Rock','Grunge','Metal','Heavy Metal','Progressive Metal','Metalcore','Folk','Indie Folk','Acoustic','Classical','Orchestral','Cinematic','Gospel','Reggae','Reggaeton','Afrobeats','Latin Pop','Bossa Nova','Country','Punk','New Wave','Blues','Pop Ballad','Power Ballad'],
   mood: ['melancholic','euphoric','dreamy','dark','uplifting','nostalgic','aggressive','romantic','chill','cinematic','ethereal','haunting','playful','mysterious','empowering','bittersweet','triumphant','eerie','hopeful','desperate','introspective','sensual','peaceful','frantic','brooding','intense','serene','chaotic','tender','whimsical'],
@@ -12,22 +11,22 @@ const VALID = {
   tempo: ['60bpm','70bpm','80bpm','85bpm','90bpm','95bpm','100bpm','110bpm','120bpm','128bpm','130bpm','140bpm','150bpm','160bpm','slow tempo','mid tempo','uptempo'],
 };
 
-const PROMPT = `You are a music style analyzer. Look at this character illustration and suggest music tags that match the character's visual aesthetic, mood, color palette, clothing style, and overall energy.
+const PROMPT = `You are a music style analyzer. Look at this character illustration and suggest music tags that best match the character's visual aesthetic, mood, color palette, clothing style, and overall energy. Choose values that feel most fitting for this specific image.`;
 
-Return ONLY a valid JSON object. Use ONLY values from the lists below. Do not invent new values.
-
-{
-  "genre": [1-2 values from: ${VALID.genre.join(', ')}],
-  "mood": [1-3 values from: ${VALID.mood.join(', ')}],
-  "vocal_arrangement": [exactly 1 value from: ${VALID.vocal_arrangement.join(', ')}],
-  "vocal_style": [1-2 values from: ${VALID.vocal_style.join(', ')}],
-  "instrument": [1-3 values from: ${VALID.instrument.join(', ')}],
-  "production": [1-2 values from: ${VALID.production.join(', ')}],
-  "era": [0-1 values from: ${VALID.era.join(', ')}],
-  "tempo": [exactly 1 value from: ${VALID.tempo.join(', ')}]
-}
-
-Return pure JSON only. No explanation, no markdown, no code block.`;
+const RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    genre:             { type: 'array', items: { type: 'string', enum: VALID.genre },             minItems: 1, maxItems: 2 },
+    mood:              { type: 'array', items: { type: 'string', enum: VALID.mood },              minItems: 1, maxItems: 3 },
+    vocal_arrangement: { type: 'array', items: { type: 'string', enum: VALID.vocal_arrangement }, minItems: 1, maxItems: 1 },
+    vocal_style:       { type: 'array', items: { type: 'string', enum: VALID.vocal_style },       minItems: 1, maxItems: 2 },
+    instrument:        { type: 'array', items: { type: 'string', enum: VALID.instrument },        minItems: 1, maxItems: 3 },
+    production:        { type: 'array', items: { type: 'string', enum: VALID.production },        minItems: 1, maxItems: 2 },
+    era:               { type: 'array', items: { type: 'string', enum: VALID.era },               minItems: 0, maxItems: 1 },
+    tempo:             { type: 'array', items: { type: 'string', enum: VALID.tempo },             minItems: 1, maxItems: 1 },
+  },
+  required: ['genre', 'mood', 'vocal_arrangement', 'vocal_style', 'instrument', 'production', 'tempo'],
+};
 
 export const config = {
   api: { bodyParser: { sizeLimit: '10mb' } },
@@ -58,11 +57,20 @@ export default async function handler(req, res) {
           { inline_data: { mime_type: mimeType, data: imageData } },
         ],
       }],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 512, responseMimeType: 'application/json' },
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 1024,
+        responseMimeType: 'application/json',
+        responseSchema: RESPONSE_SCHEMA,
+      },
     }),
   });
 
   const data = await response.json();
+
+  console.log('[analyze-image] status:', response.status);
+  console.log('[analyze-image] raw:', JSON.stringify(data).slice(0, 500));
+
   if (!response.ok) {
     return res.status(response.status).json({ error: data.error?.message || '분석 실패' });
   }
@@ -71,18 +79,17 @@ export default async function handler(req, res) {
 
   let tags;
   try {
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    tags = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    tags = JSON.parse(raw);
   } catch {
     return res.status(500).json({ error: 'Gemini 응답 파싱 실패', raw });
   }
 
   // 유효한 값만 필터링
   const filtered = {};
-  for (const [key, values] of Object.entries(tags)) {
-    if (!VALID[key] || !Array.isArray(values)) continue;
-    const clean = values.filter(v => VALID[key].includes(v));
-    if (clean.length > 0) filtered[key] = clean;
+  for (const [k, values] of Object.entries(tags)) {
+    if (!VALID[k] || !Array.isArray(values)) continue;
+    const clean = values.filter(v => VALID[k].includes(v));
+    if (clean.length > 0) filtered[k] = clean;
   }
 
   res.status(200).json({ tags: filtered });

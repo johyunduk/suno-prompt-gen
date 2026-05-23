@@ -3,6 +3,8 @@ import { TAG_GROUPS } from '../../data/tags';
 import { TEMPLATES, TEMPLATE_CATEGORIES } from '../../data/structures';
 import { STYLE_PRESETS } from '../../data/presets';
 import { usePromptStorage } from '../../hooks/usePromptStorage';
+import { useGemini } from '../../hooks/useGemini';
+import { useImageAnalysis } from '../../hooks/useImageAnalysis';
 import CopyButton from '../ui/CopyButton';
 import VocalCasting from '../VocalCasting';
 
@@ -101,6 +103,12 @@ function sortPresetsByUsage(presets, usage) {
   return [...presets].sort((a, b) => (usage[b.id] ?? 0) - (usage[a.id] ?? 0));
 }
 
+function openGroupsForTags(prev, tagMap) {
+  const updated = { ...prev };
+  Object.keys(tagMap).forEach(id => { updated[id] = true; });
+  return updated;
+}
+
 export default function Builder() {
   const [selected, setSelected] = useState({});
   const [activePreset, setActivePreset] = useState(null);
@@ -118,9 +126,17 @@ export default function Builder() {
   const [lyricsCategory, setLyricsCategory] = useState('K-Pop');
   const [lyricsStructure, setLyricsStructure] = useState(FALLBACK_TEMPLATE_KEY);
   const [vocalPrompt, setVocalPrompt] = useState('');
+  const [generatedLyrics, setGeneratedLyrics] = useState('');
+  const [imagePreview, setImagePreview] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [suggestedTags, setSuggestedTags] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
   const shareTimerRef = useRef(null);
   const handleVocalChange = useCallback((p) => setVocalPrompt(p), []);
   const { saved, save, remove, clear } = usePromptStorage();
+  const { generate, loading, error } = useGemini();
+  const { analyze, loading: analyzing, error: analyzeError } = useImageAnalysis();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -128,7 +144,13 @@ export default function Builder() {
     if (p) setCustom(p);
   }, []);
 
+
   useEffect(() => () => clearTimeout(shareTimerRef.current), []);
+
+  // blob URL 메모리 정리 — imagePreview 변경 및 언마운트 시 이전 URL 해제
+  useEffect(() => {
+    return () => { if (imagePreview) URL.revokeObjectURL(imagePreview); };
+  }, [imagePreview]);
 
   const getGroupSelected = (groupId) => selected[groupId] ?? [];
 
@@ -198,11 +220,7 @@ export default function Builder() {
     setSelected(preset.tags);
     setActivePreset(preset.id);
     setCustom('');
-    setExpandedGroups(prev => {
-      const updated = { ...prev };
-      Object.keys(preset.tags).forEach(id => { updated[id] = true; });
-      return updated;
-    });
+    setExpandedGroups(prev => openGroupsForTags(prev, preset.tags));
     if (preset.structure && TEMPLATES[preset.structure]) {
       const cat = TEMPLATES[preset.structure].category;
       setLyricsCategory(cat);
@@ -238,6 +256,45 @@ export default function Builder() {
     setLyricsStructure(firstKeyByCategory(cat));
   };
 
+  const resetImage = useCallback(() => {
+    setImagePreview('');
+    setImageFile(null);
+    setSuggestedTags(null);
+  }, []);
+
+  const handleImageSelect = useCallback((file) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    setImageFile(file);
+    setSuggestedTags(null);
+    setImagePreview(URL.createObjectURL(file));
+  }, []);
+
+  const handleImageDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleImageSelect(e.dataTransfer.files[0]);
+  }, [handleImageSelect]);
+
+  const handleAnalyze = useCallback(async () => {
+    if (!imageFile) return;
+    const tags = await analyze(imageFile);
+    if (tags) setSuggestedTags(tags);
+  }, [imageFile, analyze]);
+
+  const handleApplyTags = useCallback(() => {
+    if (!suggestedTags) return;
+    setSelected(suggestedTags);
+    setActivePreset(null);
+    setExpandedGroups(prev => openGroupsForTags(prev, suggestedTags));
+    resetImage();
+  }, [suggestedTags, resetImage]);
+
+  const handleGenerate = useCallback(async () => {
+    setGeneratedLyrics('');
+    const result = await generate(lyricsPrompt);
+    if (result) setGeneratedLyrics(result);
+  }, [generate, lyricsPrompt]);
+
   return (
     <div className="section-content">
       <div className="section-label">Chapter 02</div>
@@ -253,6 +310,69 @@ export default function Builder() {
               <button className="copy-btn" onClick={handleReset}>전체 초기화</button>
             )}
           </div>
+        </div>
+
+        {/* ── Image Analysis ── */}
+        <div className="image-analysis-section">
+          <div className="preset-section-header">
+            <span className="field-label">🎨 캐릭터 이미지로 분석</span>
+            {imagePreview && (
+              <button className="copy-btn" onClick={resetImage}>초기화</button>
+            )}
+          </div>
+
+          {!imagePreview ? (
+            <div
+              className={`image-dropzone ${isDragging ? 'image-dropzone--dragging' : ''}`}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleImageDrop}
+            >
+              <span className="image-dropzone-icon">🖼️</span>
+              <span>클릭하거나 이미지를 드래그하세요</span>
+              <span className="image-dropzone-sub">JPG, PNG, WEBP</span>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(e) => handleImageSelect(e.target.files[0])}
+              />
+            </div>
+          ) : (
+            <div className="image-preview-area">
+              <img src={imagePreview} alt="업로드된 캐릭터" className="image-preview" />
+              <div className="image-preview-actions">
+                <button
+                  className="btn btn-primary"
+                  onClick={handleAnalyze}
+                  disabled={analyzing}
+                >
+                  {analyzing ? '⏳ 분석 중...' : '✨ 이미지 분석'}
+                </button>
+              </div>
+              {analyzeError && <div className="alert-error">⚠️ {analyzeError}</div>}
+              {suggestedTags && (
+                <div className="suggested-tags-box">
+                  <div className="field-label" style={{ marginBottom: '0.5rem' }}>분석 결과</div>
+                  <div className="suggested-tags-list">
+                    {Object.entries(suggestedTags).map(([group, values]) => (
+                      <div key={group} className="suggested-tag-group">
+                        <span className="suggested-tag-group-name">{group}</span>
+                        <div className="suggested-tag-values">
+                          {values.map(v => <span key={v} className="suggested-tag-chip">{v}</span>)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="btn btn-primary" style={{ marginTop: '0.75rem' }} onClick={handleApplyTags}>
+                    태그 적용하기
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── Presets ── */}
@@ -390,10 +510,9 @@ export default function Builder() {
       <div className="divider" />
 
       {/* ── Lyrics Prompt Generator ── */}
-      <div className="section-label" style={{ marginBottom: '0.75rem' }}>가사 생성 프롬프트</div>
+      <div className="section-label" style={{ marginBottom: '0.75rem' }}>가사 생성</div>
       <div className="info-block">
-        아래 조건을 채운 뒤 <strong>Claude에게 줄 프롬프트 복사</strong>를 클릭하세요.
-        복사한 텍스트를 그대로 Claude에 붙여넣으면 완성된 가사를 받을 수 있습니다.
+        아래 조건을 설정하고 <strong>가사 생성</strong> 버튼을 누르세요. 프롬프트만 필요하면 복사 버튼을 이용하세요.
       </div>
 
       <div className="prompt-box">
@@ -470,15 +589,42 @@ export default function Builder() {
 
           <div className="output-section">
             <div className="output-header">
-              <div className="field-label">Claude에게 줄 프롬프트 미리보기</div>
+              <div className="field-label">프롬프트 미리보기</div>
             </div>
             <div className="output-area output-area--preview">
               {lyricsPrompt}
             </div>
-            <CopyButton text={lyricsPrompt} label="Claude 가사 프롬프트 복사" className="copy-btn--primary" />
+            <div className="lyrics-actions">
+              <button
+                className="btn btn-primary"
+                onClick={handleGenerate}
+                disabled={loading}
+              >
+                {loading ? '⏳ 생성 중...' : '✨ 가사 생성'}
+              </button>
+              <CopyButton text={lyricsPrompt} label="프롬프트 복사" className="copy-btn--primary" />
+            </div>
           </div>
         </div>
       </div>
+
+      {/* ── Generated Lyrics ── */}
+      {error && (
+        <div className="alert-error">⚠️ {error}</div>
+      )}
+      {(loading || generatedLyrics) && (
+        <div className="prompt-box" style={{ marginTop: '1.5rem' }}>
+          <div className="prompt-header">
+            <span>생성된 가사</span>
+            {generatedLyrics && <CopyButton text={generatedLyrics} label="전체 복사" />}
+          </div>
+          <div className="prompt-body">
+            <div className="output-area output-area--lyrics">
+              {loading ? '가사를 생성하고 있습니다...' : generatedLyrics}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

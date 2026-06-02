@@ -1,4 +1,4 @@
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent';
+import { callGemini, sendError } from './_lib/gemini.js';
 
 const VALID = {
   genre: ['K-Pop','J-Pop','Pop','Synth-Pop','Electropop','Dark Pop','Indie Pop','Indie Rock','Dream Pop','Shoegaze','City Pop','Y2K pop','Vaporwave','Hip-Hop','Trap','Drill','Boom Bap','Cloud Rap','R&B','Neo Soul','Soul','Funk','EDM','House','Techno','Trance','Future Bass','Dubstep','Drum & Bass','Lo-Fi','Chillwave','Ambient','Jazz','Nu Jazz','Jazz Fusion','Rock','Alternative Rock','Post-Rock','Grunge','Metal','Heavy Metal','Progressive Metal','Metalcore','Folk','Indie Folk','Acoustic','Classical','Orchestral','Cinematic','Gospel','Reggae','Reggaeton','Afrobeats','Latin Pop','Bossa Nova','Country','Punk','New Wave','Blues','Pop Ballad','Power Ballad'],
@@ -10,6 +10,8 @@ const VALID = {
   era: ['60s','70s','80s','90s','2000s','2010s','modern','80s Tokyo','90s New York','Y2K','classic rock era','disco era','golden age hip-hop','K-pop 4th gen','City Pop 80s'],
   tempo: ['60bpm','70bpm','80bpm','85bpm','90bpm','95bpm','100bpm','110bpm','120bpm','128bpm','130bpm','140bpm','150bpm','160bpm','slow tempo','mid tempo','uptempo'],
 };
+
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 const PROMPT = `You are a music style analyzer. Look at this character illustration and suggest music tags that best match the character's visual aesthetic, mood, color palette, clothing style, and overall energy. Choose values that feel most fitting for this specific image.`;
 
@@ -37,20 +39,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const key = process.env.GEMINI_KEY;
-  if (!key) {
-    return res.status(500).json({ error: 'GEMINI_KEY 환경변수가 설정되지 않았습니다.' });
-  }
-
-  const { imageData, mimeType } = req.body;
+  const { imageData, mimeType } = req.body || {};
   if (!imageData || !mimeType) {
     return res.status(400).json({ error: '이미지 데이터가 없습니다.' });
   }
+  if (!ALLOWED_MIME.includes(mimeType)) {
+    return res.status(400).json({ error: '지원하지 않는 이미지 형식입니다. (JPG, PNG, WEBP, GIF)' });
+  }
 
-  const response = await fetch(`${API_URL}?key=${key}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  try {
+    const raw = await callGemini({
       contents: [{
         parts: [
           { text: PROMPT },
@@ -63,34 +61,25 @@ export default async function handler(req, res) {
         responseMimeType: 'application/json',
         responseSchema: RESPONSE_SCHEMA,
       },
-    }),
-  });
+    });
 
-  const data = await response.json();
+    let tags;
+    try {
+      tags = JSON.parse(raw || '{}');
+    } catch {
+      return res.status(502).json({ error: 'Gemini 응답을 해석하지 못했습니다.' });
+    }
 
-  console.log('[analyze-image] status:', response.status);
-  console.log('[analyze-image] raw:', JSON.stringify(data).slice(0, 500));
+    // 허용된 값만 통과시킨다.
+    const filtered = {};
+    for (const [k, values] of Object.entries(tags)) {
+      if (!VALID[k] || !Array.isArray(values)) continue;
+      const clean = values.filter(v => VALID[k].includes(v));
+      if (clean.length > 0) filtered[k] = clean;
+    }
 
-  if (!response.ok) {
-    return res.status(response.status).json({ error: data.error?.message || '분석 실패' });
+    res.status(200).json({ tags: filtered });
+  } catch (err) {
+    sendError(res, err);
   }
-
-  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
-
-  let tags;
-  try {
-    tags = JSON.parse(raw);
-  } catch {
-    return res.status(500).json({ error: 'Gemini 응답 파싱 실패', raw });
-  }
-
-  // 유효한 값만 필터링
-  const filtered = {};
-  for (const [k, values] of Object.entries(tags)) {
-    if (!VALID[k] || !Array.isArray(values)) continue;
-    const clean = values.filter(v => VALID[k].includes(v));
-    if (clean.length > 0) filtered[k] = clean;
-  }
-
-  res.status(200).json({ tags: filtered });
 }

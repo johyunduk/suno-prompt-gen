@@ -758,3 +758,28 @@ nav::-webkit-scrollbar { display: none; }
 .suggested-tag-chip { background: #1a1300; border: 1px solid var(--gold); color: var(--gold); font-size: 0.68rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Space Mono', monospace; }
 .style-prompt-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .prompt-preview-toggle { background: none; border: none; cursor: pointer; text-align: left; }
+
+/* AI 스타일 정제 */
+.refine-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem; }
+.refine-hint { font-size: 0.72rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+.refined-box {
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  background: #100c00;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.refined-box__label {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--gold2);
+  font-family: 'Space Mono', monospace;
+  text-transform: uppercase;
+}
+.output-area--refined {
+  background: #070500;
+  border-color: #3a2e08;
+  color: var(--white);
+}

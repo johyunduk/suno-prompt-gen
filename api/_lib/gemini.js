@@ -1,7 +1,7 @@
 // Gemini API 공통 호출 헬퍼 — 모델/엔드포인트/에러 처리를 한 곳에서 관리한다.
 const MODEL = 'gemini-3.5-flash';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-const TIMEOUT_MS = 30000;
+const TIMEOUT_MS = 45000;
 
 export class GeminiError extends Error {
   constructor(status, message) {

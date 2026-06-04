@@ -60,6 +60,8 @@ export default async function handler(req, res) {
         maxOutputTokens: 2048,
         responseMimeType: 'application/json',
         responseSchema: RESPONSE_SCHEMA,
+        // 이미지→태그 분류는 깊은 추론이 불필요 — thinking을 낮춰 지연/504를 줄인다.
+        thinkingConfig: { thinkingLevel: 'low' },
       },
     });
 

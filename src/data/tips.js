@@ -52,22 +52,22 @@ muddy low-end / sidechain compression / tape saturation`,
   {
     icon: '⚡',
     title: 'Style Prompt 길이 최적화',
-    desc: '너무 짧으면 방향성 부족, 너무 길면 혼란. 핵심 단어 5~10개가 최적. 모순되는 태그(예: "slow + fast paced")는 피하세요.',
-    example: `❌ 너무 짧: "sad song"
-❌ 너무 길: (30단어 이상 모든 요소 나열)
-✅ 최적: "melancholic indie pop, fingerpicked guitar, breathy female vocals, 90bpm, reverb-heavy, lo-fi production"`,
+    desc: 'v5.5는 구체적 디스크립터를 보상합니다. 모호한 단어 대신 구체적 디스크립터 10~15개를, 핵심 정체성은 앞쪽에. 모순 태그(예: "slow + fast paced")는 피하세요.',
+    example: `❌ 너무 짧/모호: "sad song"
+❌ 모호한 단어 나열: "epic, emotional, vibey, cool"
+✅ 최적: "melancholic indie pop, fingerpicked acoustic guitar, breathy female vocals with airy runs, warm analog mix, vinyl warmth, 90bpm, A minor"`,
   },
   {
     icon: '🌏',
     title: '한국어 가사 잘 쓰는 법',
-    desc: 'Style Prompt는 영어로, 가사만 한국어로 쓰는 게 더 안정적입니다. v4에서 한국어 처리가 크게 개선되었습니다.',
+    desc: 'Style Prompt는 영어로, 가사만 한글로(로마자 X) 쓰는 게 안정적입니다. v5.5는 한글을 자연스럽게 부릅니다. 한 줄은 6~12음절로 짧게.',
     example: `Style Prompt (영어): "K-pop, emotional ballad, 75bpm, piano, female vocals"
-Lyrics (한국어):
+Lyrics (한글):
 [Verse 1]
 창문 너머 비가 내려
 너의 목소리가 들려
 
-→ 한영 혼용 가사도 자연스럽게 작동`,
+→ 한영 혼용은 한 줄 안에서 섞지 말고 섹션 단위로 분리(예: Verse 한국어, Chorus 영어)`,
   },
   {
     icon: '🔄',
@@ -88,11 +88,11 @@ Lyrics (한국어):
   },
   {
     icon: '🎵',
-    title: 'v3 vs v4 버전 전략',
-    desc: 'v4가 기본이지만 특정 장르는 v3.5가 더 자연스럽습니다. 레트로, 로파이, 재즈는 v3.5를 시도해보세요.',
-    example: `v4 추천: K-Pop, EDM, 팝 발라드, 신스팝
-v3.5 추천: Lo-Fi, Vintage Jazz, 레트로 팝, Vaporwave
-→ 결과를 비교해보고 더 나은 버전 선택`,
+    title: 'v5.5 vs v4.5 버전 전략',
+    desc: 'v5.5가 기본 — 보컬·팝·멜로딕 장르에 가장 강하고 네거티브(no X) 반영이 안정적. 헤비·초고속·실험적 장르는 v4.5가 더 거칠고 자연스러울 때도 있습니다.',
+    example: `v5.5 추천: K-Pop, R&B, 팝 발라드, 신스팝, 시티팝
+v4.5 시도: 헤비메탈, 초고속 DnB, 거친 실험 사운드
+→ 같은 프롬프트로 두 버전 비교 후 선택`,
   },
   {
     icon: '💡',

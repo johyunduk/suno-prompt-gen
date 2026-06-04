@@ -32,9 +32,9 @@ export default function Builder() {
 
   const handleGenerateLyrics = useCallback(async () => {
     setGeneratedLyrics('');
-    const result = await generate(lyrics.buildPrompt(effectiveStyle));
+    const result = await generate(lyrics.buildPrompt(effectiveStyle, style.styleHints));
     if (result) setGeneratedLyrics(result);
-  }, [generate, lyrics, effectiveStyle]);
+  }, [generate, lyrics, effectiveStyle, style.styleHints]);
 
   return (
     <div className="section-content">
@@ -60,6 +60,7 @@ export default function Builder() {
       <LyricsGenerator
         form={lyrics}
         stylePrompt={effectiveStyle}
+        styleHints={style.styleHints}
         onGenerate={handleGenerateLyrics}
         loading={loading}
         error={error}

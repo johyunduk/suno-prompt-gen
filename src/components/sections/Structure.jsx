@@ -30,8 +30,8 @@ export default function Structure() {
       <h2 className="section-title">곡 구조 설계</h2>
 
       <div className="info-block">
-        Suno는 약 <strong>2분 분량</strong>의 곡을 기본으로 생성합니다.
-        Extend 기능으로 최대 10분까지 늘릴 수 있습니다.
+        v5.5는 가사 분량에 비례해 <strong>한 번에 최대 8분</strong>까지 생성합니다(섹션·줄 수가 곧 길이).
+        더 길게는 Extend로 이어붙일 수 있습니다.
         처음부터 전체 구조를 설계하고 분할 생성하는 게 전문가 방식입니다.
       </div>
 

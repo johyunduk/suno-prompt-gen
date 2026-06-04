@@ -7,13 +7,14 @@ import CopyButton from '../ui/CopyButton';
 export default function LyricsGenerator({
   form,
   stylePrompt,
+  styleHints,
   onGenerate,
   loading,
   error,
   generatedLyrics,
 }) {
   const [showPromptPreview, setShowPromptPreview] = useState(false);
-  const lyricsPrompt = form.buildPrompt(stylePrompt);
+  const lyricsPrompt = form.buildPrompt(stylePrompt, styleHints);
 
   return (
     <>

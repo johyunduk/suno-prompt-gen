@@ -5,6 +5,11 @@ import { STYLE_PRESETS } from '../data/presets';
 
 const PRESET_USAGE_KEY = 'suno_preset_usage';
 
+// 태그 value -> 한국어 label 역참조 (가사 프롬프트에 무드/장르를 한국어로 명시하기 위함).
+const LABEL_BY_VALUE = Object.fromEntries(
+  TAG_GROUPS.map(g => [g.id, Object.fromEntries(g.tags.map(t => [t.value, t.label]))])
+);
+
 function pickRandom(arr, min, max) {
   const n = min + Math.floor(Math.random() * (max - min + 1));
   return [...arr].sort(() => Math.random() - 0.5).slice(0, Math.min(n, arr.length));
@@ -66,6 +71,12 @@ export function useStyleBuilder() {
     () => Object.values(selected).flat().length,
     [selected]
   );
+
+  // 가사 생성 시 무드/장르를 한국어로 따로 강조하기 위한 힌트.
+  const styleHints = useMemo(() => ({
+    genre: (selected.genre ?? []).map(v => LABEL_BY_VALUE.genre?.[v] ?? v),
+    mood: (selected.mood ?? []).map(v => LABEL_BY_VALUE.mood?.[v] ?? v),
+  }), [selected]);
 
   const getGroupSelected = useCallback((groupId) => selected[groupId] ?? [], [selected]);
 
@@ -136,7 +147,7 @@ export function useStyleBuilder() {
 
   return {
     selected, custom, setCustom, vocalPrompt, setVocalPrompt,
-    expandedGroups, activePreset, prompt, totalSelected, sortedPresets, presetStructure,
+    expandedGroups, activePreset, prompt, totalSelected, sortedPresets, presetStructure, styleHints,
     getGroupSelected, isGroupAllSelected,
     toggleTag, toggleSelectAll, toggleGroup,
     applyPreset, handleRandom, handleReset, applyTags,

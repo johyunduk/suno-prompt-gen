@@ -1,5 +1,5 @@
 import { callGemini, sendError } from './_lib/gemini.js';
-import { TAG_GROUPS } from '../src/data/tags.js';
+import { TAG_GROUPS, GROUP_LIMITS } from '../src/data/tags.js';
 
 // UI 태그(tags.js)를 단일 원본으로 사용 — 목록이 갈라지지 않게 여기서 파생한다.
 // reference 그룹은 아티스트 스타일 설명이라 이미지 분석 대상에서 제외한다.
@@ -17,14 +17,15 @@ const PROMPT = `You are a music style analyzer. Look at this character illustrat
 const RESPONSE_SCHEMA = {
   type: 'object',
   properties: {
-    genre:             { type: 'array', items: { type: 'string', enum: VALID.genre },             minItems: 1, maxItems: 2 },
-    mood:              { type: 'array', items: { type: 'string', enum: VALID.mood },              minItems: 1, maxItems: 3 },
-    vocal_arrangement: { type: 'array', items: { type: 'string', enum: VALID.vocal_arrangement }, minItems: 1, maxItems: 1 },
+    // maxItems는 UI의 선택 한도(GROUP_LIMITS)와 동일하게 유지한다.
+    genre:             { type: 'array', items: { type: 'string', enum: VALID.genre },             minItems: 1, maxItems: GROUP_LIMITS.genre },
+    mood:              { type: 'array', items: { type: 'string', enum: VALID.mood },              minItems: 1, maxItems: GROUP_LIMITS.mood },
+    vocal_arrangement: { type: 'array', items: { type: 'string', enum: VALID.vocal_arrangement }, minItems: 1, maxItems: GROUP_LIMITS.vocal_arrangement },
     vocal_style:       { type: 'array', items: { type: 'string', enum: VALID.vocal_style },       minItems: 1, maxItems: 2 },
     instrument:        { type: 'array', items: { type: 'string', enum: VALID.instrument },        minItems: 1, maxItems: 3 },
     production:        { type: 'array', items: { type: 'string', enum: VALID.production },        minItems: 1, maxItems: 2 },
-    era:               { type: 'array', items: { type: 'string', enum: VALID.era },               minItems: 0, maxItems: 1 },
-    tempo:             { type: 'array', items: { type: 'string', enum: VALID.tempo },             minItems: 1, maxItems: 1 },
+    era:               { type: 'array', items: { type: 'string', enum: VALID.era },               minItems: 0, maxItems: GROUP_LIMITS.era },
+    tempo:             { type: 'array', items: { type: 'string', enum: VALID.tempo },             minItems: 1, maxItems: GROUP_LIMITS.tempo },
   },
   required: ['genre', 'mood', 'vocal_arrangement', 'vocal_style', 'instrument', 'production', 'tempo'],
 };

@@ -4,6 +4,7 @@ import { TEMPLATES } from '../data/structures';
 import { STYLE_PRESETS } from '../data/presets';
 import { INSTRUMENTAL_TOKEN, extractInstrumental } from '../lib/instrumental';
 import { entryToBuilderState } from '../lib/promptStorage';
+import { applyTagToggle, sanitizeSelection, findSoftConflicts } from '../lib/tagRules';
 
 const PRESET_USAGE_KEY = 'suno_preset_usage';
 // 인스트루멘탈이면 프롬프트에서 제외할 보컬 관련 태그 그룹.
@@ -131,6 +132,9 @@ export function useStyleBuilder() {
     [refinePayload]
   );
 
+  // 소프트 충돌(의도된 대비일 수 있는 조합)은 자동 해제하지 않고 경고만 띄운다.
+  const softConflicts = useMemo(() => findSoftConflicts(selected), [selected]);
+
   // 가사 생성 시 무드/장르를 한국어로 따로 강조하기 위한 힌트.
   const styleHints = useMemo(() => ({
     genre: (selected.genre ?? []).map(v => LABEL_BY_VALUE.genre?.[v] ?? v),
@@ -139,13 +143,10 @@ export function useStyleBuilder() {
 
   const getGroupSelected = useCallback((groupId) => selected[groupId] ?? [], [selected]);
 
+  // 선택 한도(단일/최대 N개)와 하드 충돌 자동 해제는 tagRules가 처리한다.
   const toggleTag = useCallback((groupId, value) => {
     setActivePreset(null);
-    setSelected(prev => {
-      const group = prev[groupId] ?? [];
-      const next = group.includes(value) ? group.filter(t => t !== value) : [...group, value];
-      return { ...prev, [groupId]: next };
-    });
+    setSelected(prev => applyTagToggle(prev, groupId, value).selected);
   }, []);
 
   const isGroupAllSelected = useCallback((groupId, tags) => {
@@ -188,7 +189,7 @@ export function useStyleBuilder() {
   );
 
   const handleRandom = useCallback(() => {
-    setSelected(generateRandomTags());
+    setSelected(sanitizeSelection(generateRandomTags()));
     setActivePreset(null);
     setInstrumental(false);
     setExpandedGroups(Object.fromEntries(TAG_GROUPS.map(g => [g.id, true])));
@@ -206,9 +207,10 @@ export function useStyleBuilder() {
   }, []);
 
   const applyTags = useCallback((tagMap) => {
-    setSelected(tagMap);
+    const clean = sanitizeSelection(tagMap);
+    setSelected(clean);
     setActivePreset(null);
-    setExpandedGroups(prev => openGroupsForTags(prev, tagMap));
+    setExpandedGroups(prev => openGroupsForTags(prev, clean));
   }, []);
 
   // 저장 프롬프트 불러오기 — 저장 당시 결과를 그대로 복원하기 위해
@@ -232,7 +234,7 @@ export function useStyleBuilder() {
     expandedGroups, activePreset, prompt, totalSelected, sortedPresets, presetStructure, styleHints,
     isInstrumental: instrumental, setInstrumental,
     excludeTags, excludeCustom, setExcludeCustom, toggleExclude, excludePrompt,
-    refinePayload, canRefine,
+    refinePayload, canRefine, softConflicts,
     getGroupSelected, isGroupAllSelected,
     toggleTag, toggleSelectAll, toggleGroup,
     applyPreset, handleRandom, handleReset, applyTags, loadPrompt,

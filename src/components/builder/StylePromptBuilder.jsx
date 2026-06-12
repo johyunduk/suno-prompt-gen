@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { TAG_GROUPS, EXCLUDE_SUGGESTIONS } from '../../data/tags';
+import { TAG_GROUPS, EXCLUDE_SUGGESTIONS, GROUP_LIMITS } from '../../data/tags';
 import { STYLE_PRESETS } from '../../data/presets';
 import { makeEntryData } from '../../lib/promptStorage';
 import CopyButton from '../ui/CopyButton';
@@ -137,7 +137,14 @@ export default function StylePromptBuilder({
             <div key={group.id} className="field-group">
               <div className="group-header-row">
                 <button className="group-header" onClick={() => style.toggleGroup(group.id)}>
-                  <span className="field-label">{group.label}</span>
+                  <span className="field-label">
+                    {group.label}
+                    {GROUP_LIMITS[group.id] && (
+                      <span className="refine-hint">
+                        {' '}({GROUP_LIMITS[group.id] === 1 ? '단일 선택' : `최대 ${GROUP_LIMITS[group.id]}개`})
+                      </span>
+                    )}
+                  </span>
                   <span className="group-count">
                     {style.getGroupSelected(group.id).length > 0 && (
                       <span className="group-badge">{style.getGroupSelected(group.id).length}</span>
@@ -145,7 +152,7 @@ export default function StylePromptBuilder({
                     <span className="group-chevron">{style.expandedGroups[group.id] ? '▲' : '▼'}</span>
                   </span>
                 </button>
-                {group.selectAll !== false && (
+                {group.selectAll !== false && !GROUP_LIMITS[group.id] && (
                   <button
                     className={`tag-select-all-btn ${allSelected ? 'tag-select-all-btn--active' : ''}`}
                     onClick={() => style.toggleSelectAll(group.id, group.tags)}
@@ -171,6 +178,14 @@ export default function StylePromptBuilder({
             </div>
           );
         })}
+
+        {style.softConflicts.length > 0 && (
+          <div className="alert-error">
+            {style.softConflicts.map(c => (
+              <div key={`${c.a}-${c.b}`}>⚠️ {c.message}</div>
+            ))}
+          </div>
+        )}
 
         {!style.isInstrumental && (
           <div className="field-group">

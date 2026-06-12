@@ -295,6 +295,39 @@ export const TAG_GROUPS = [
   },
 ];
 
+// 그룹별 최대 선택 수 — 초과 선택 시 가장 오래된 선택이 자동 해제된다.
+// (장르가 많으면 평균적인 소리가 되고, BPM/시대/보컬 구성은 동시에 둘일 수 없다)
+export const GROUP_LIMITS = {
+  genre: 2,
+  mood: 3,
+  vocal_arrangement: 1,
+  era: 1,
+  tempo: 1,
+};
+
+// 하드 충돌 — 동시에 성립할 수 없는 조합. 한쪽을 선택하면 다른 쪽이 자동 해제된다.
+export const CONFLICT_PAIRS = [
+  ['minimal production', 'maximalist'],
+  ['reverb-heavy', 'dry signal'],
+  ['warm analog', 'clean digital'],
+  ['whisper', 'powerful'],
+  ['whisper', 'operatic'],
+];
+
+// 소프트 충돌 — 의도된 대비일 수 있어 자동 해제하지 않고 경고만 표시한다.
+export const SOFT_CONFLICT_PAIRS = [
+  ['dark', 'uplifting'],
+  ['melancholic', 'euphoric'],
+  ['aggressive', 'peaceful'],
+  ['aggressive', 'serene'],
+  ['frantic', 'serene'],
+  ['frantic', 'peaceful'],
+  ['chaotic', 'serene'],
+  ['haunting', 'playful'],
+  ['eerie', 'hopeful'],
+  ['brooding', 'playful'],
+];
+
 // Suno Advanced Options의 Exclude 필드에 넣을 제외 요소 추천.
 // Style Prompt에 "no ..."로 쓰는 대신 별도 Exclude 필드를 쓰는 것이 공식 권장 방식이다.
 export const EXCLUDE_SUGGESTIONS = [

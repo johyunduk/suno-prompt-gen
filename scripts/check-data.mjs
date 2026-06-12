@@ -1,6 +1,6 @@
 // 데이터 무결성 검사 — 프리셋 태그가 전부 tags.js(단일 원본)에 존재하는지 확인한다.
 // 사용: npm run check:data (build 전에 자동 실행됨)
-import { TAG_GROUPS } from '../src/data/tags.js';
+import { TAG_GROUPS, GROUP_LIMITS, CONFLICT_PAIRS } from '../src/data/tags.js';
 import { STYLE_PRESETS } from '../src/data/presets.js';
 import { TEMPLATES } from '../src/data/structures.js';
 
@@ -27,6 +27,18 @@ for (const preset of STYLE_PRESETS) {
   // 3. 인스트루멘탈 프리셋은 보컬 태그를 가질 수 없다
   if (preset.instrumental && (preset.tags.vocal_arrangement || preset.tags.vocal_style)) {
     fail(`프리셋 "${preset.id}": instrumental인데 보컬 태그가 있음`);
+  }
+  // 4. 그룹 선택 한도 준수
+  for (const [groupId, limit] of Object.entries(GROUP_LIMITS)) {
+    const count = preset.tags[groupId]?.length ?? 0;
+    if (count > limit) fail(`프리셋 "${preset.id}": ${groupId} ${count}개 (한도 ${limit})`);
+  }
+  // 5. 하드 충돌 태그 동시 포함 금지
+  const allValues = new Set(Object.values(preset.tags).flat());
+  for (const [a, b] of CONFLICT_PAIRS) {
+    if (allValues.has(a) && allValues.has(b)) {
+      fail(`프리셋 "${preset.id}": 충돌 태그 동시 포함 ("${a}" ↔ "${b}")`);
+    }
   }
 }
 

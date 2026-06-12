@@ -1,13 +1,15 @@
 export const TIPS = [
   {
     icon: '🎯',
-    title: '구체적 레퍼런스 아티스트 사용',
-    desc: '장르 단어보다 "inspired by [아티스트]"가 더 정확합니다. Suno는 유명 아티스트의 프로덕션 스타일을 학습했습니다.',
-    example: `❌ "emotional pop music"
-✅ "inspired by IU, Lauv-style production, intimate acoustic pop"
+    title: '아티스트명 대신 음악적 특성으로 분해',
+    desc: 'Suno는 유명 아티스트·인물 이름이 들어가면 생성을 차단할 수 있습니다. 이름 대신 그 아티스트를 만드는 장르·보컬·프로덕션 특성을 풀어 쓰세요.',
+    example: `❌ "inspired by IU, emotional pop"
+✅ "intimate Korean indie-pop ballad, delicate female vocal,
+   piano-led arrangement, restrained emotional delivery"
 
-❌ "hip-hop"
-✅ "inspired by Frank Ocean, alternative R&B, introspective, lush production"`,
+❌ "Frank Ocean style"
+✅ "alternative R&B, introspective male falsetto,
+   lush layered production, hazy atmosphere"`,
   },
   {
     icon: '🔊',

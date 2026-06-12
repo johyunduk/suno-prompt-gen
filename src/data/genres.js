@@ -8,7 +8,7 @@ export const GENRE_PRESETS = [
   {
     name: 'K-팝 4세대',
     emoji: '✨',
-    prompt: 'K-pop, 4th generation, airy production, NewJeans-style, 100bpm, breathy female vocals, minimalist beats, Y2K aesthetic',
+    prompt: 'K-pop, 4th generation, airy production, youthful girl group, 100bpm, breathy female vocals, minimalist beats, Y2K aesthetic',
     tags: ['K-팝', '몽환적인', '숨결 섞인', '미니멀 프로덕션', '100 BPM'],
   },
   {
@@ -98,7 +98,7 @@ export const GENRE_PRESETS = [
   {
     name: '오케스트라 / 영화음악',
     emoji: '🎻',
-    prompt: 'cinematic orchestral, epic, 80bpm, full strings, brass ensemble, dramatic, Hans Zimmer-style, no vocals, emotional build',
+    prompt: 'cinematic orchestral, epic, 80bpm, full strings, brass ensemble, dramatic, modern film score style, no vocals, emotional build',
     tags: ['오케스트라', '영화적인', '보컬 없음', '현악기', '브라스'],
   },
 ];

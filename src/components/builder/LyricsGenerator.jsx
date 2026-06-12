@@ -8,6 +8,7 @@ import CopyButton from '../ui/CopyButton';
 export default function LyricsGenerator({
   form,
   stylePrompt,
+  excludePrompt,
   styleHints,
   instrumental,
   onGenerate,
@@ -183,6 +184,15 @@ export default function LyricsGenerator({
                 </div>
                 <div className="output-area">{stylePrompt}</div>
                 <CopyButton text={stylePrompt} label="Style Prompt 복사" className="copy-btn--primary" />
+                {excludePrompt && (
+                  <>
+                    <div className="output-header" style={{ marginTop: '0.5rem' }}>
+                      <div className="field-label">Exclude Styles (Advanced Options)</div>
+                    </div>
+                    <div className="output-area">{excludePrompt}</div>
+                    <CopyButton text={excludePrompt} label="Exclude 복사" />
+                  </>
+                )}
               </div>
             )}
           </div>

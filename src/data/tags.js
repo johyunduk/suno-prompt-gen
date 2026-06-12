@@ -295,6 +295,19 @@ export const TAG_GROUPS = [
   },
 ];
 
+// Suno Advanced Options의 Exclude 필드에 넣을 제외 요소 추천.
+// Style Prompt에 "no ..."로 쓰는 대신 별도 Exclude 필드를 쓰는 것이 공식 권장 방식이다.
+export const EXCLUDE_SUGGESTIONS = [
+  { label: '오토튠', value: 'autotune' },
+  { label: '일렉 기타', value: 'electric guitar' },
+  { label: '신스', value: 'synth' },
+  { label: '랩', value: 'rap' },
+  { label: '드럼 머신', value: 'drum machine' },
+  { label: '백킹 보컬', value: 'backing vocals' },
+  { label: '과한 리버브', value: 'heavy reverb' },
+  { label: '페이드아웃', value: 'fade out' },
+];
+
 // 곡 길이는 Style Prompt 태그가 아니라 가사 구성 파라미터(초 단위)로 쓴다.
 // Suno는 스타일 문구의 길이 지시를 사실상 무시하므로, 가사 분량으로 길이를 제어한다.
 export const DURATION_OPTIONS = [

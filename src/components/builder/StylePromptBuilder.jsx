@@ -1,23 +1,34 @@
 import { useState, useRef, useEffect } from 'react';
-import { TAG_GROUPS } from '../../data/tags';
+import { TAG_GROUPS, EXCLUDE_SUGGESTIONS } from '../../data/tags';
 import { STYLE_PRESETS } from '../../data/presets';
+import { makeEntryData } from '../../lib/promptStorage';
 import CopyButton from '../ui/CopyButton';
 import VocalCasting from '../VocalCasting';
 import ImageAnalyzer from './ImageAnalyzer';
 
-function encodeToURL(prompt) {
+const VOCAL_GENDER_LABELS = { female: '여성', male: '남성', any: '무관 (Auto)' };
+
+function encodeToURL(prompt, exclude, instrumental, advanced) {
   const params = new URLSearchParams({ p: prompt });
+  if (exclude) params.set('x', exclude);
+  if (instrumental) params.set('inst', '1');
+  if (advanced) {
+    params.set('vg', advanced.vocalGender);
+    params.set('wd', String(advanced.weirdness));
+    params.set('si', String(advanced.styleInfluence));
+  }
   return `${window.location.origin}${window.location.pathname}?${params}#main`;
 }
 
 export default function StylePromptBuilder({
   style,
   storage,
-  refinedPrompt,
+  refinedData,
   refining,
   refineError,
   onRefine,
   effectiveStyle,
+  effectiveExclude,
   onGenerateLyrics,
   lyricsLoading,
 }) {
@@ -30,7 +41,10 @@ export default function StylePromptBuilder({
 
   const handleShare = async () => {
     if (!effectiveStyle) return;
-    await navigator.clipboard.writeText(encodeToURL(effectiveStyle));
+    const advanced = refinedData
+      ? { vocalGender: refinedData.vocalGender, weirdness: refinedData.weirdness, styleInfluence: refinedData.styleInfluence }
+      : null;
+    await navigator.clipboard.writeText(encodeToURL(effectiveStyle, effectiveExclude, style.isInstrumental, advanced));
     setShareMsg('URL 복사됨!');
     clearTimeout(shareTimerRef.current);
     shareTimerRef.current = setTimeout(() => setShareMsg(''), 2000);
@@ -38,7 +52,20 @@ export default function StylePromptBuilder({
 
   const handleSave = () => {
     if (!effectiveStyle) return;
-    storage.save(saveName || `Prompt ${storage.saved.length + 1}`, effectiveStyle);
+    // 구조화 저장 — Exclude/인스트루멘탈/권장 설정까지 함께 보존한다.
+    // makeEntryData가 stylePrompt 속 인스트루멘탈 토큰을 분리해 중복 조립을 막는다.
+    storage.save(saveName || `Prompt ${storage.saved.length + 1}`, makeEntryData({
+      stylePrompt: effectiveStyle,
+      exclude: effectiveExclude,
+      instrumental: style.isInstrumental,
+      advanced: refinedData
+        ? {
+            vocalGender: refinedData.vocalGender,
+            weirdness: refinedData.weirdness,
+            styleInfluence: refinedData.styleInfluence,
+          }
+        : null,
+    }));
     setSaveName('');
     setShowSaveInput(false);
   };
@@ -147,7 +174,7 @@ export default function StylePromptBuilder({
 
         {!style.isInstrumental && (
           <div className="field-group">
-            <VocalCasting onChange={style.setVocalPrompt} />
+            <VocalCasting key={style.vocalResetKey} onChange={style.setVocalPrompt} />
           </div>
         )}
 
@@ -156,9 +183,31 @@ export default function StylePromptBuilder({
           <input
             className="field-input"
             type="text"
-            placeholder="예: 90s production, heavy reverb, inspired by IU..."
+            placeholder="예: 90s production, heavy reverb, intimate female vocal... (아티스트명은 생성 차단 위험)"
             value={style.custom}
             onChange={e => style.setCustom(e.target.value)}
+          />
+        </div>
+
+        <div className="field-group">
+          <div className="field-label">제외할 요소 (Suno의 Exclude Styles 필드용)</div>
+          <div className="tag-row" style={{ marginBottom: '0.4rem' }}>
+            {EXCLUDE_SUGGESTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                className={`tag ${style.excludeTags.includes(value) ? 'tag--selected' : ''}`}
+                onClick={() => style.toggleExclude(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <input
+            className="field-input"
+            type="text"
+            placeholder="직접 입력 (영어, 쉼표로 구분): 예) trap beat, whistle"
+            value={style.excludeCustom}
+            onChange={e => style.setExcludeCustom(e.target.value)}
           />
         </div>
 
@@ -174,6 +223,11 @@ export default function StylePromptBuilder({
             </div>
           </div>
           <div className="output-area">{style.prompt || '태그를 선택하면 프롬프트가 자동 생성됩니다.'}</div>
+          {style.excludePrompt && (
+            <div className="output-area" style={{ marginTop: '0.5rem' }}>
+              <strong>Exclude:</strong> {style.excludePrompt}
+            </div>
+          )}
 
           {showSaveInput && (
             <div className="save-row">
@@ -195,18 +249,39 @@ export default function StylePromptBuilder({
             <button
               className="btn btn-primary"
               onClick={onRefine}
-              disabled={refining || !style.prompt}
+              disabled={refining || !style.canRefine}
             >
               {refining ? '⏳ 다듬는 중...' : '✨ AI로 스타일 프롬프트 다듬기'}
             </button>
-            <span className="refine-hint">선택한 태그를 자연스럽고 일관된 Suno 스타일로 변환합니다.</span>
+            <span className="refine-hint">
+              {style.canRefine
+                ? '선택한 태그를 자연스럽고 일관된 Suno 스타일로 변환합니다.'
+                : '장르·무드 등 스타일 태그를 하나 이상 선택하면 다듬을 수 있습니다.'}
+            </span>
           </div>
           {refineError && <div className="alert-error">⚠️ {refineError}</div>}
 
-          {refinedPrompt && (
+          {refinedData && (
             <div className="refined-box">
-              <div className="refined-box__label">✨ AI가 다듬은 Style Prompt</div>
-              <div className="output-area output-area--refined">{refinedPrompt}</div>
+              <div className="refined-box__label">✨ AI가 다듬은 결과 — Suno 입력란별로 나눠 붙여넣으세요</div>
+
+              <div className="field-label" style={{ marginTop: '0.5rem' }}>Style of Music</div>
+              <div className="output-area output-area--refined">{refinedData.stylePrompt}</div>
+
+              {refinedData.exclude && (
+                <>
+                  <div className="field-label" style={{ marginTop: '0.5rem' }}>Exclude Styles (Advanced Options)</div>
+                  <div className="output-area output-area--refined">{refinedData.exclude}</div>
+                  <CopyButton text={refinedData.exclude} label="Exclude 복사" />
+                </>
+              )}
+
+              <div className="field-label" style={{ marginTop: '0.5rem' }}>권장 Advanced Options 설정</div>
+              <div className="output-area">
+                보컬 성별: {VOCAL_GENDER_LABELS[refinedData.vocalGender] ?? refinedData.vocalGender}
+                {' · '}Weirdness: {refinedData.weirdness}%
+                {' · '}Style Influence: {refinedData.styleInfluence}%
+              </div>
             </div>
           )}
 
@@ -226,7 +301,7 @@ export default function StylePromptBuilder({
             )}
             <CopyButton
               text={effectiveStyle}
-              label={refinedPrompt ? '다듬은 Style Prompt 복사' : 'Style Prompt 복사'}
+              label={refinedData ? '다듬은 Style Prompt 복사' : 'Style Prompt 복사'}
             />
           </div>
         </div>

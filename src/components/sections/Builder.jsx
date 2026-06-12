@@ -31,10 +31,11 @@ export default function Builder() {
   }, [refine, style.prompt]);
 
   const handleGenerateLyrics = useCallback(async () => {
+    if (style.isInstrumental) return;
     setGeneratedLyrics('');
     const result = await generate(lyrics.buildPrompt(effectiveStyle, style.styleHints));
     if (result) setGeneratedLyrics(result);
-  }, [generate, lyrics, effectiveStyle, style.styleHints]);
+  }, [generate, lyrics, effectiveStyle, style.styleHints, style.isInstrumental]);
 
   return (
     <div className="section-content">
@@ -53,7 +54,7 @@ export default function Builder() {
         lyricsLoading={loading}
       />
 
-      <SavedPrompts saved={storage.saved} onRemove={storage.remove} onLoad={style.setCustom} />
+      <SavedPrompts saved={storage.saved} onRemove={storage.remove} onLoad={style.loadPrompt} />
 
       <div className="divider" />
 
@@ -61,6 +62,7 @@ export default function Builder() {
         form={lyrics}
         stylePrompt={effectiveStyle}
         styleHints={style.styleHints}
+        instrumental={style.isInstrumental}
         onGenerate={handleGenerateLyrics}
         loading={loading}
         error={error}

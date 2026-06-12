@@ -26,9 +26,132 @@ function firstKeyByCategory(cat) {
   return entry?.[0] ?? FALLBACK_TEMPLATE_KEY;
 }
 
-export function buildLyricsPrompt({ stylePrompt, theme, language, structure, extraNotes, styleHints }) {
+export const DEFAULT_DURATION = 180;
+
+function formatDuration(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return s ? `${m}분 ${s}초` : `${m}분`;
+}
+
+// 곡 길이(초)에 따라 섹션 구성·줄 수 지침을 만든다. 길이와 곡 구조가 충돌하면 길이를 우선한다.
+function durationGuide(sec) {
+  const target = sec >= 240 ? '4분 이상' : `약 ${formatDuration(sec)}`;
+  const header = `- 완성곡이 ${target} 분량이 되도록 가사 양을 조절하세요. 아래 지침이 곡 구조와 충돌하면 길이를 우선해 섹션을 줄이거나 늘리세요.`;
+
+  if (sec <= 60) {
+    return `${header}
+- 핵심만 남기세요: Verse 1개 + Chorus 1~2회 정도로 압축하고, Intro/Bridge/반복 Verse는 생략하세요.
+- Verse 2~4줄, Chorus 2줄, Outro는 생략하거나 1줄.`;
+  }
+  if (sec <= 90) {
+    return `${header}
+- 구조를 압축하세요: Verse 2개 + Chorus 2회 정도. Intro/Bridge는 생략하거나 한 줄로 줄이세요.
+- Verse 3~4줄, Chorus 2~3줄, Outro 1~2줄.`;
+  }
+  if (sec <= 120) {
+    return `${header}
+- 곡 구조를 대체로 유지하되 Intro/Bridge는 짧게(1~2줄), 마지막 반복 Chorus는 1회만.
+- Verse 3~5줄, Chorus 2~3줄, Outro 1~2줄.`;
+  }
+  if (sec >= 240) {
+    return `${header}
+- 곡 구조의 모든 섹션을 살리고, 필요하면 마지막 Chorus를 한 번 더 반복하거나 Bridge 뒤에 [Instrumental break]를 추가하세요.
+- Verse 6~8줄, Chorus 3~4줄, Bridge 3~4줄, Outro 2~3줄.`;
+  }
+  // 150~210초: 표준 분량
+  return `${header}
+- 곡 구조의 섹션 구성을 그대로 따르세요.
+- Verse 4~6줄, Chorus 2~4줄, Outro 2~3줄.`;
+}
+
+// 길이 옵션(초)별 인스트루멘탈 섹션 구성 — 옵션마다 섹션 수가 다르게 설계됐다.
+const INSTRUMENTAL_SECTIONS = {
+  60: [
+    '[Instrumental Intro - sparse, atmospheric]',
+    '[Main Theme - melodic hook]',
+    '[Climax - full arrangement]',
+    '[Outro - fade out]',
+  ],
+  90: [
+    '[Instrumental Intro - sparse, atmospheric]',
+    '[Main Theme - melodic hook]',
+    '[Build - rising energy]',
+    '[Climax - full arrangement]',
+    '[Outro - fade out]',
+  ],
+  120: [
+    '[Instrumental Intro - sparse, atmospheric]',
+    '[Main Theme - melodic hook]',
+    '[Build - rising energy]',
+    '[Drop - full arrangement]',
+    '[Breakdown - stripped back]',
+    '[Outro - fade out]',
+  ],
+  150: [
+    '[Instrumental Intro - sparse, atmospheric]',
+    '[Main Theme - melodic hook]',
+    '[Build - rising energy]',
+    '[Drop - full arrangement]',
+    '[Breakdown - stripped back]',
+    '[Final Climax - layered, intense]',
+    '[Outro - fade out]',
+  ],
+  180: [
+    '[Instrumental Intro - sparse, atmospheric]',
+    '[Main Theme - melodic hook]',
+    '[Build - rising energy]',
+    '[Drop - full arrangement]',
+    '[Breakdown - stripped back]',
+    '[Theme Variation - new texture]',
+    '[Final Climax - layered, intense]',
+    '[Outro - slow fade]',
+  ],
+  210: [
+    '[Instrumental Intro - sparse, atmospheric]',
+    '[Main Theme - melodic hook]',
+    '[Build - rising energy]',
+    '[Drop - full arrangement]',
+    '[Breakdown - stripped back]',
+    '[Theme Variation - new texture]',
+    '[Build - tension rising]',
+    '[Final Climax - layered, intense]',
+    '[Outro - slow fade]',
+  ],
+  240: [
+    '[Instrumental Intro - sparse, atmospheric]',
+    '[Main Theme - melodic hook]',
+    '[Build - rising energy]',
+    '[Drop - full arrangement]',
+    '[Breakdown - stripped back]',
+    '[Interlude - ambient texture]',
+    '[Theme Variation - new texture]',
+    '[Build - tension rising]',
+    '[Final Climax - layered, intense]',
+    '[Climax Reprise - extended, evolving]',
+    '[Outro - slow fade]',
+  ],
+};
+
+// 인스트루멘탈 곡용 구조 프롬프트. Suno에서 Instrumental 토글을 켜고 Lyrics 칸에 붙여넣는 용도.
+export function buildInstrumentalStructure(durationSec) {
+  // 옵션 외의 값이 들어와도 가장 가까운 하위 구간으로 처리한다.
+  const keys = Object.keys(INSTRUMENTAL_SECTIONS).map(Number).sort((a, b) => a - b);
+  const key = keys.filter(k => k <= durationSec).pop() ?? keys[0];
+  return INSTRUMENTAL_SECTIONS[key].join('\n\n');
+}
+
+export function buildLyricsPrompt({ stylePrompt, theme, language, structure, extraNotes, styleHints, duration = DEFAULT_DURATION }) {
   const langRule = LANG_RULES[language] ?? LANG_RULES.ko;
   const structureText = TEMPLATES[structure]?.template ?? TEMPLATES[FALLBACK_TEMPLATE_KEY].template;
+
+  // 길이 지침과 모순되지 않도록 곡 구조의 강제 수준을 길이에 따라 조절한다.
+  const structureRule = duration <= 120
+    ? '기본 틀 — 아래 "길이" 지침에 맞춰 섹션을 생략·압축하세요. 남기는 섹션의 종류와 순서는 이 구조를 따르세요'
+    : duration >= 240
+      ? '이 섹션 구성과 순서를 따르되, 아래 "길이" 지침이 허용하는 반복·추가는 가능합니다'
+      : '이 섹션 구성과 순서를 반드시 그대로 따르세요';
+  const shortStructureNote = duration <= 120 ? ' 길이 지침에 따라 섹션을 줄였다면 남긴 섹션만 출력하세요.' : '';
 
   const hints = [];
   if (styleHints?.genre?.length) hints.push(`- 장르: ${styleHints.genre.join(', ')}`);
@@ -58,7 +181,7 @@ ${langRule}
 ## 주제 / 컨셉
 ${theme || '자유롭게 어울리는 주제로'}
 
-## 곡 구조 (이 섹션 구성과 순서를 반드시 그대로 따르세요)
+## 곡 구조 (${structureRule})
 ${structureText}
 
 ## 추가 요청
@@ -79,13 +202,12 @@ ${extraNotes || '없음'}
 - 듀엣 구조의 [Verse 1 - Vocalist A] 같은 파트 표기는 그대로 유지하세요.
 
 ## 길이 (반드시 지켜주세요)
-- 완성곡이 2분 30초~3분 30초 분량이 되도록 조절하세요.
-- Verse 4~6줄, Chorus 2~4줄, Outro 2~3줄.
+${durationGuide(duration)}
 - 반복 섹션([Chorus] 등)도 매번 가사를 전부 쓰세요(생략·"반복" 표기 금지).
 
 ## 출력 형식
 - 출력 전, 완성된 가사가 위 음악 스타일의 장르·무드·에너지·보컬(랩 여부)과 일치하는지 점검하세요. 어긋나면 고쳐서 출력하세요.
-- 위 곡 구조의 [Verse 1], [Chorus] 등 대괄호 메타태그를 그대로 유지하면서 가사만 채워 출력하세요.
+- 위 곡 구조의 [Verse 1], [Chorus] 등 대괄호 메타태그 표기를 유지하면서 가사만 채워 출력하세요.${shortStructureNote}
 - 머리말·해설·부가 설명 없이 가사만 출력하세요.`;
 }
 
@@ -96,6 +218,7 @@ export function useLyricsForm(presetStructure) {
   const [notes, setNotes] = useState('');
   const [category, setCategory] = useState('K-Pop');
   const [structure, setStructure] = useState(FALLBACK_TEMPLATE_KEY);
+  const [duration, setDuration] = useState(DEFAULT_DURATION);
 
   // 프리셋이 곡 구조를 추천하면 렌더 중에 동기화한다(React 권장 패턴).
   const [prevPreset, setPrevPreset] = useState(presetStructure);
@@ -113,8 +236,8 @@ export function useLyricsForm(presetStructure) {
   }, []);
 
   const buildPrompt = useCallback((stylePrompt, styleHints) => buildLyricsPrompt({
-    stylePrompt, theme, language, structure, extraNotes: notes, styleHints,
-  }), [theme, language, structure, notes]);
+    stylePrompt, theme, language, structure, extraNotes: notes, styleHints, duration,
+  }), [theme, language, structure, notes, duration]);
 
   return {
     theme, setTheme,
@@ -122,6 +245,7 @@ export function useLyricsForm(presetStructure) {
     notes, setNotes,
     category, changeCategory,
     structure, setStructure,
+    duration, setDuration,
     buildPrompt,
   };
 }

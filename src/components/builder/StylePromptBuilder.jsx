@@ -85,7 +85,26 @@ export default function StylePromptBuilder({
       </div>
 
       <div className="prompt-body">
+        <div className="field-group">
+          <div className="field-label">인스트루멘탈</div>
+          <div className="tag-row">
+            <button
+              className={`tag ${style.isInstrumental ? 'tag--selected' : ''}`}
+              onClick={() => style.setInstrumental(!style.isInstrumental)}
+            >
+              🎹 보컬 없음 (Instrumental)
+            </button>
+            {style.isInstrumental && (
+              <span className="refine-hint">보컬 구성·음색·캐스팅은 프롬프트에서 제외됩니다.</span>
+            )}
+          </div>
+        </div>
+
         {TAG_GROUPS.map(group => {
+          // 인스트루멘탈이면 보컬 관련 그룹은 프롬프트에서 제외되므로 UI에서도 숨긴다.
+          if (style.isInstrumental && (group.id === 'vocal_arrangement' || group.id === 'vocal_style')) {
+            return null;
+          }
           const allSelected = style.isGroupAllSelected(group.id, group.tags);
           return (
             <div key={group.id} className="field-group">
@@ -99,12 +118,14 @@ export default function StylePromptBuilder({
                     <span className="group-chevron">{style.expandedGroups[group.id] ? '▲' : '▼'}</span>
                   </span>
                 </button>
-                <button
-                  className={`tag-select-all-btn ${allSelected ? 'tag-select-all-btn--active' : ''}`}
-                  onClick={() => style.toggleSelectAll(group.id, group.tags)}
-                >
-                  {allSelected ? '전체 해제' : '전체 선택'}
-                </button>
+                {group.selectAll !== false && (
+                  <button
+                    className={`tag-select-all-btn ${allSelected ? 'tag-select-all-btn--active' : ''}`}
+                    onClick={() => style.toggleSelectAll(group.id, group.tags)}
+                  >
+                    {allSelected ? '전체 해제' : '전체 선택'}
+                  </button>
+                )}
               </div>
               {style.expandedGroups[group.id] && (
                 <div className="tag-row">
@@ -124,9 +145,11 @@ export default function StylePromptBuilder({
           );
         })}
 
-        <div className="field-group">
-          <VocalCasting onChange={style.setVocalPrompt} />
-        </div>
+        {!style.isInstrumental && (
+          <div className="field-group">
+            <VocalCasting onChange={style.setVocalPrompt} />
+          </div>
+        )}
 
         <div className="field-group">
           <div className="field-label">직접 입력 추가</div>
@@ -188,13 +211,19 @@ export default function StylePromptBuilder({
           )}
 
           <div className="style-prompt-actions">
-            <button
-              className="btn btn-primary"
-              onClick={onGenerateLyrics}
-              disabled={lyricsLoading || !effectiveStyle}
-            >
-              {lyricsLoading ? '⏳ 가사 생성 중...' : '✨ 가사 바로 생성'}
-            </button>
+            {style.isInstrumental ? (
+              <span className="refine-hint">
+                🎹 보컬 없음(인스트루멘탈)이 선택되어 가사 대신 아래 <strong>인스트루멘탈 구조</strong> 섹션의 구조 프롬프트를 사용하세요.
+              </span>
+            ) : (
+              <button
+                className="btn btn-primary"
+                onClick={onGenerateLyrics}
+                disabled={lyricsLoading || !effectiveStyle}
+              >
+                {lyricsLoading ? '⏳ 가사 생성 중...' : '✨ 가사 바로 생성'}
+              </button>
+            )}
             <CopyButton
               text={effectiveStyle}
               label={refinedPrompt ? '다듬은 Style Prompt 복사' : 'Style Prompt 복사'}

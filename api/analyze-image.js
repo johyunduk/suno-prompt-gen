@@ -1,15 +1,14 @@
 import { callGemini, sendError } from './_lib/gemini.js';
+import { TAG_GROUPS } from '../src/data/tags.js';
 
-const VALID = {
-  genre: ['K-Pop','J-Pop','Pop','Synth-Pop','Electropop','Dark Pop','Indie Pop','Indie Rock','Dream Pop','Shoegaze','City Pop','Y2K pop','Vaporwave','Hip-Hop','Trap','Drill','Boom Bap','Cloud Rap','R&B','Neo Soul','Soul','Funk','EDM','House','Techno','Trance','Future Bass','Dubstep','Drum & Bass','Lo-Fi','Chillwave','Ambient','Jazz','Nu Jazz','Jazz Fusion','Rock','Alternative Rock','Post-Rock','Grunge','Metal','Heavy Metal','Progressive Metal','Metalcore','Folk','Indie Folk','Acoustic','Classical','Orchestral','Cinematic','Gospel','Reggae','Reggaeton','Afrobeats','Latin Pop','Bossa Nova','Country','Punk','New Wave','Blues','Pop Ballad','Power Ballad'],
-  mood: ['melancholic','euphoric','dreamy','dark','uplifting','nostalgic','aggressive','romantic','chill','cinematic','ethereal','haunting','playful','mysterious','empowering','bittersweet','triumphant','eerie','hopeful','desperate','introspective','sensual','peaceful','frantic','brooding','intense','serene','chaotic','tender','whimsical'],
-  vocal_arrangement: ['female vocals','male vocals','male and female duet','two female vocalists','two male vocalists','female group vocals','male group vocals','mixed group vocals, male and female','no vocals, instrumental'],
-  vocal_style: ['falsetto','breathy','raspy','powerful','smooth','whisper','croon','operatic','autotuned','rich harmonies','layered vocals','rap flow','melodic rap','gospel vocal runs','vibrato','pitched up vocals'],
-  instrument: ['piano','electric piano','Rhodes','organ','acoustic guitar','electric guitar','classical guitar','fingerpicked guitar','bass guitar','electric bass','808 bass','synth','pad synth','lead synth','arpeggio synth','analog synth','strings','violin','cello','orchestral strings','drums','drum machine','TR-808','live drums','brass','trumpet','saxophone','flute','vinyl crackle','cassette hiss','harp','marimba'],
-  production: ['reverb-heavy','dry signal','warm analog','clean digital','vintage','heavy compression','punchy mix','wide stereo','sidechain compression','vinyl warmth','tape saturation','cassette lo-fi','distortion','heavy distortion','minimal production','maximalist','glossy mix','heavy bass','sub-bass heavy','club-ready','radio-ready','sample-based'],
-  era: ['60s','70s','80s','90s','2000s','2010s','modern','80s Tokyo','90s New York','Y2K','classic rock era','disco era','golden age hip-hop','K-pop 4th gen','City Pop 80s'],
-  tempo: ['60bpm','70bpm','80bpm','85bpm','90bpm','95bpm','100bpm','110bpm','120bpm','128bpm','130bpm','140bpm','150bpm','160bpm','slow tempo','mid tempo','uptempo'],
-};
+// UI 태그(tags.js)를 단일 원본으로 사용 — 목록이 갈라지지 않게 여기서 파생한다.
+// reference 그룹은 아티스트 스타일 설명이라 이미지 분석 대상에서 제외한다.
+const ANALYZED_GROUPS = ['genre', 'mood', 'vocal_arrangement', 'vocal_style', 'instrument', 'production', 'era', 'tempo'];
+const VALID = Object.fromEntries(
+  TAG_GROUPS
+    .filter(g => ANALYZED_GROUPS.includes(g.id))
+    .map(g => [g.id, g.tags.map(t => t.value)])
+);
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 

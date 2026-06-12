@@ -105,6 +105,9 @@ export const TAG_GROUPS = [
   {
     id: 'vocal_arrangement',
     label: '보컬 구성',
+    // 솔로/듀엣/그룹은 상호 모순이라 전체 선택이 의미가 없다.
+    // 인스트루멘탈(보컬 없음)은 태그가 아니라 빌더의 전용 상태로 관리한다.
+    selectAll: false,
     tags: [
       // 솔로
       { label: '여성 솔로', value: 'female vocals' },
@@ -129,8 +132,6 @@ export const TAG_GROUPS = [
       { label: '혼성 합창', value: 'mixed choir' },
       { label: '여성 합창', value: 'female choir' },
       { label: '남성 합창', value: 'male choir' },
-      // 보컬 없음
-      { label: '보컬 없음', value: 'no vocals, instrumental' },
     ],
   },
   {
@@ -248,6 +249,7 @@ export const TAG_GROUPS = [
     tags: [
       { label: '60 BPM', value: '60bpm' },
       { label: '70 BPM', value: '70bpm' },
+      { label: '75 BPM', value: '75bpm' },
       { label: '80 BPM', value: '80bpm' },
       { label: '85 BPM', value: '85bpm' },
       { label: '90 BPM', value: '90bpm' },
@@ -291,17 +293,16 @@ export const TAG_GROUPS = [
       { label: 'Nujabes 스타일', value: 'lo-fi hip-hop jazz fusion, peaceful melancholic, instrumental beats, vinyl warmth' },
     ],
   },
-  {
-    id: 'duration',
-    label: '곡 길이',
-    tags: [
-      { label: '~1분', value: 'very short song, about 1 minute' },
-      { label: '~1분 30초', value: 'short song, about 1 minute 30 seconds' },
-      { label: '~2분', value: 'short song, about 2 minutes' },
-      { label: '~2분 30초', value: 'song about 2 minutes 30 seconds' },
-      { label: '~3분', value: 'song about 3 minutes' },
-      { label: '~3분 30초', value: 'song about 3 minutes 30 seconds' },
-      { label: '~4분+', value: 'long song, over 4 minutes' },
-    ],
-  },
+];
+
+// 곡 길이는 Style Prompt 태그가 아니라 가사 구성 파라미터(초 단위)로 쓴다.
+// Suno는 스타일 문구의 길이 지시를 사실상 무시하므로, 가사 분량으로 길이를 제어한다.
+export const DURATION_OPTIONS = [
+  { label: '~1분', value: 60 },
+  { label: '~1분 30초', value: 90 },
+  { label: '~2분', value: 120 },
+  { label: '~2분 30초', value: 150 },
+  { label: '~3분', value: 180 },
+  { label: '~3분 30초', value: 210 },
+  { label: '4분+', value: 240 },
 ];

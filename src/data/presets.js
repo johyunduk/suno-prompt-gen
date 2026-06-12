@@ -226,10 +226,10 @@ export const STYLE_PRESETS = [
     desc: '공부할 때 듣는 재즈 샘플 기반 로파이, 바이닐 질감',
     emoji: '📚',
     structure: 'hiphop',
+    instrumental: true,
     tags: {
       genre: ['Lo-Fi', 'Hip-Hop'],
       mood: ['chill', 'nostalgic'],
-      vocal_arrangement: ['no vocals, instrumental'],
       instrument: ['Rhodes', 'vinyl crackle'],
       production: ['vinyl warmth', 'cassette lo-fi'],
       era: ['90s'],
@@ -242,10 +242,10 @@ export const STYLE_PRESETS = [
     desc: '재즈 샘플, 평화롭고 애잔한 멜랑콜리, 인스트루멘탈',
     emoji: '🍃',
     structure: 'hiphop',
+    instrumental: true,
     tags: {
       genre: ['Lo-Fi', 'Jazz Fusion', 'Hip-Hop'],
       mood: ['peaceful', 'melancholic', 'nostalgic'],
-      vocal_arrangement: ['no vocals, instrumental'],
       instrument: ['piano', 'saxophone', 'vinyl crackle'],
       production: ['vinyl warmth', 'warm analog'],
       era: ['90s'],

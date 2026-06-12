@@ -2,8 +2,11 @@ import { useState, useMemo, useCallback } from 'react';
 import { TAG_GROUPS } from '../data/tags';
 import { TEMPLATES } from '../data/structures';
 import { STYLE_PRESETS } from '../data/presets';
+import { INSTRUMENTAL_TOKEN, extractInstrumental } from '../lib/instrumental';
 
 const PRESET_USAGE_KEY = 'suno_preset_usage';
+// 인스트루멘탈이면 프롬프트에서 제외할 보컬 관련 태그 그룹.
+const VOCAL_GROUP_IDS = ['vocal_arrangement', 'vocal_style'];
 
 // 태그 value -> 한국어 label 역참조 (가사 프롬프트에 무드/장르를 한국어로 명시하기 위함).
 const LABEL_BY_VALUE = Object.fromEntries(
@@ -48,11 +51,12 @@ export function useStyleBuilder() {
   const [selected, setSelected] = useState({});
   const [activePreset, setActivePreset] = useState(null);
   const [presetUsage, setPresetUsage] = useState(loadPresetUsage);
-  // URL 공유로 들어온 경우 ?p= 값을 직접 입력란 초기값으로 사용한다.
-  const [custom, setCustom] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('p') || '';
-  });
+  // URL 공유로 들어온 경우 ?p= 값을 파싱해 인스트루멘탈 여부와 직접 입력 초기값으로 나눈다.
+  const [initialShared] = useState(() =>
+    extractInstrumental(new URLSearchParams(window.location.search).get('p') || '')
+  );
+  const [custom, setCustom] = useState(initialShared.text);
+  const [instrumental, setInstrumental] = useState(initialShared.instrumental);
   const [vocalPrompt, setVocalPrompt] = useState('');
   const [expandedGroups, setExpandedGroups] = useState(
     () => Object.fromEntries(TAG_GROUPS.map((g, i) => [g.id, i < 2]))
@@ -61,16 +65,21 @@ export function useStyleBuilder() {
   const [presetStructure, setPresetStructure] = useState(null);
 
   const prompt = useMemo(() => {
-    const values = TAG_GROUPS.flatMap(g => selected[g.id] ?? []);
-    if (vocalPrompt) values.push(vocalPrompt);
+    // 인스트루멘탈이면 보컬 구성/음색/캐스팅을 프롬프트에서 제외해 모순을 원천 차단한다.
+    const values = TAG_GROUPS.flatMap(g =>
+      instrumental && VOCAL_GROUP_IDS.includes(g.id) ? [] : (selected[g.id] ?? [])
+    );
+    if (instrumental) values.unshift(INSTRUMENTAL_TOKEN);
+    if (!instrumental && vocalPrompt) values.push(vocalPrompt);
     if (custom.trim()) values.push(custom.trim());
     return values.join(', ');
-  }, [selected, custom, vocalPrompt]);
+  }, [selected, custom, vocalPrompt, instrumental]);
 
   const totalSelected = useMemo(
     () => Object.values(selected).flat().length,
     [selected]
   );
+
 
   // 가사 생성 시 무드/장르를 한국어로 따로 강조하기 위한 힌트.
   const styleHints = useMemo(() => ({
@@ -111,6 +120,7 @@ export function useStyleBuilder() {
     setSelected(preset.tags);
     setActivePreset(preset.id);
     setCustom('');
+    setInstrumental(!!preset.instrumental);
     setExpandedGroups(prev => openGroupsForTags(prev, preset.tags));
     if (preset.structure && TEMPLATES[preset.structure]) {
       setPresetStructure({ category: TEMPLATES[preset.structure].category, structure: preset.structure });
@@ -130,6 +140,7 @@ export function useStyleBuilder() {
   const handleRandom = useCallback(() => {
     setSelected(generateRandomTags());
     setActivePreset(null);
+    setInstrumental(false);
     setExpandedGroups(Object.fromEntries(TAG_GROUPS.map(g => [g.id, true])));
   }, []);
 
@@ -137,6 +148,7 @@ export function useStyleBuilder() {
     setSelected({});
     setCustom('');
     setActivePreset(null);
+    setInstrumental(false);
   }, []);
 
   const applyTags = useCallback((tagMap) => {
@@ -145,11 +157,19 @@ export function useStyleBuilder() {
     setExpandedGroups(prev => openGroupsForTags(prev, tagMap));
   }, []);
 
+  // 저장 프롬프트 불러오기 — 인스트루멘탈 토큰을 분리해 전용 상태로 복원한다.
+  const loadPrompt = useCallback((text) => {
+    const parsed = extractInstrumental(text || '');
+    setCustom(parsed.text);
+    setInstrumental(parsed.instrumental);
+  }, []);
+
   return {
     selected, custom, setCustom, vocalPrompt, setVocalPrompt,
     expandedGroups, activePreset, prompt, totalSelected, sortedPresets, presetStructure, styleHints,
+    isInstrumental: instrumental, setInstrumental,
     getGroupSelected, isGroupAllSelected,
     toggleTag, toggleSelectAll, toggleGroup,
-    applyPreset, handleRandom, handleReset, applyTags,
+    applyPreset, handleRandom, handleReset, applyTags, loadPrompt,
   };
 }

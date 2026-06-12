@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "check:data": "node scripts/check-data.mjs",
+    "test": "node --test tests/*.test.mjs && npm run check:data",
+    "prebuild": "npm run check:data",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

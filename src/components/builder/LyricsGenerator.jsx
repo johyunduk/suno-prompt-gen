@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TEMPLATES, TEMPLATE_CATEGORIES } from '../../data/structures';
-import { LANG_OPTIONS } from '../../hooks/useLyricsForm';
+import { DURATION_OPTIONS } from '../../data/tags';
+import { LANG_OPTIONS, buildInstrumentalStructure } from '../../hooks/useLyricsForm';
 import CopyButton from '../ui/CopyButton';
 
 // 가사 생성 폼 + 생성 결과 표시. 프롬프트 빌드/생성은 컨테이너가 담당한다.
@@ -8,6 +9,7 @@ export default function LyricsGenerator({
   form,
   stylePrompt,
   styleHints,
+  instrumental,
   onGenerate,
   loading,
   error,
@@ -15,6 +17,48 @@ export default function LyricsGenerator({
 }) {
   const [showPromptPreview, setShowPromptPreview] = useState(false);
   const lyricsPrompt = form.buildPrompt(stylePrompt, styleHints);
+
+  const durationField = (
+    <div className="field-group">
+      <div className="field-label">곡 길이</div>
+      <div className="tag-row">
+        {DURATION_OPTIONS.map(({ value, label }) => (
+          <button
+            key={value}
+            className={`tag ${form.duration === value ? 'tag--selected' : ''}`}
+            onClick={() => form.setDuration(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // 인스트루멘탈 모드: 가사 대신 Suno Lyrics 칸에 붙여넣을 구조 프롬프트를 만든다.
+  if (instrumental) {
+    const structurePrompt = buildInstrumentalStructure(form.duration);
+    return (
+      <>
+        <div className="section-label" style={{ marginBottom: '0.75rem' }}>인스트루멘탈 구조</div>
+        <div className="info-block">
+          <strong>보컬 없음</strong>이 선택되어 가사 대신 곡 구조 프롬프트를 제공합니다.
+          Suno에서 <strong>Instrumental</strong> 토글을 켜고, 아래 구조 태그를 Lyrics 칸에 붙여넣으세요.
+        </div>
+
+        <div className="prompt-box">
+          <div className="prompt-header">
+            <span>구조 프롬프트</span>
+            <CopyButton text={structurePrompt} label="구조 복사" className="copy-btn--primary" />
+          </div>
+          <div className="prompt-body">
+            {durationField}
+            <div className="output-area output-area--lyrics">{structurePrompt}</div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -83,6 +127,8 @@ export default function LyricsGenerator({
               </div>
             </div>
           </div>
+
+          {durationField}
 
           <div className="field-group">
             <div className="field-label">추가 요청 (선택)</div>

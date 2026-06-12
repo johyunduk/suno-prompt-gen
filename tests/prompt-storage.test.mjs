@@ -35,6 +35,12 @@ test('구버전 항목의 인스트루멘탈 토큰은 플래그로 분리', () 
   assert.equal(out.data.stylePrompt, 'Lo-Fi, 80bpm');
 });
 
+test('advanced의 personalization 등 추가 필드도 그대로 보존', () => {
+  const advanced = { vocalGender: 'any', weirdness: 50, styleInfluence: 70, personalization: '발라드라면 Voices로 본인 음색을 입혀보세요.' };
+  const out = normalizeEntry({ id: 9, name: 'p13n', data: { stylePrompt: 'ballad', exclude: '', instrumental: false, advanced } });
+  assert.deepEqual(out.data.advanced, advanced);
+});
+
 test('부분 필드만 있는 신버전 항목은 기본값 보강', () => {
   const out = normalizeEntry({ id: 4, name: 'p', data: { stylePrompt: 'pop' } });
   assert.deepEqual(out.data, { stylePrompt: 'pop', exclude: '', instrumental: false, advanced: null });

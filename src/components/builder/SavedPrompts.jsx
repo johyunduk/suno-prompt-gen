@@ -27,6 +27,9 @@ export default function SavedPrompts({ saved, onRemove, onLoad }) {
                 {' · '}Style Influence {item.data.advanced.styleInfluence}%
               </div>
             )}
+            {item.data.advanced?.personalization && (
+              <div className="saved-prompt">💡 {item.data.advanced.personalization}</div>
+            )}
             <div className="saved-actions">
               <CopyButton text={item.data.stylePrompt} label="복사" />
               <button className="copy-btn" onClick={() => onLoad(item.data)}>불러오기</button>

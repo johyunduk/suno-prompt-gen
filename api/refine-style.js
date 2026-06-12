@@ -35,7 +35,12 @@ const SYSTEM = `You are an expert Suno AI music style engineer working with the 
 - weirdness: integer 0-100 — conventional radio-ready styles 25-45, genre-blending or moody styles 45-60, experimental styles (vaporwave, shoegaze, hyperpop, heavy fusion) 60-80.
 - styleInfluence: integer 0-100 — how strictly Suno should follow the style prompt. Detailed, specific prompts deserve 60-85; sparse prompts 40-60.
 
-Output ONLY the JSON object.`;
+## personalization — Suno v5.5 Pro feature recommendation (write in KOREAN, 1-2 short sentences)
+Recommend how to use Suno v5.5 personalization features for THIS specific style. Pick only what's relevant:
+- Voices (Pro/Premier 전용): the user can capture their own voice and apply it — recommend when vocal identity/intimacy defines the style (singer-songwriter, ballad, indie).
+- Custom Models (Pro/Premier, 최대 3개): built from the user's own uploaded tracks — recommend when consistency with the user's existing discography in this genre matters.
+- My Taste (모든 사용자): learns preferences from likes/history — recommend for exploratory or recurring style workflows.
+For instrumental tracks, do not recommend Voices. Be concrete to the style (mention the genre/vibe), not generic.`;
 
 const RESPONSE_SCHEMA = {
   type: 'object',
@@ -45,8 +50,9 @@ const RESPONSE_SCHEMA = {
     vocalGender: { type: 'string', enum: ['female', 'male', 'any'] },
     weirdness: { type: 'integer' },
     styleInfluence: { type: 'integer' },
+    personalization: { type: 'string' },
   },
-  required: ['stylePrompt', 'exclude', 'vocalGender', 'weirdness', 'styleInfluence'],
+  required: ['stylePrompt', 'exclude', 'vocalGender', 'weirdness', 'styleInfluence', 'personalization'],
 };
 
 const GROUP_LABELS = {
@@ -156,6 +162,7 @@ export default async function handler(req, res) {
         vocalGender: ['female', 'male', 'any'].includes(parsed.vocalGender) ? parsed.vocalGender : 'any',
         weirdness: clamp(parsed.weirdness, 0, 100),
         styleInfluence: clamp(parsed.styleInfluence, 0, 100),
+        personalization: (typeof parsed.personalization === 'string' ? parsed.personalization : '').trim().slice(0, 500),
       },
     });
   } catch (err) {

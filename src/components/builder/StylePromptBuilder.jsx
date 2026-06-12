@@ -63,6 +63,7 @@ export default function StylePromptBuilder({
             vocalGender: refinedData.vocalGender,
             weirdness: refinedData.weirdness,
             styleInfluence: refinedData.styleInfluence,
+            personalization: refinedData.personalization || '',
           }
         : null,
     }));
@@ -297,6 +298,13 @@ export default function StylePromptBuilder({
                 {' · '}Weirdness: {refinedData.weirdness}%
                 {' · '}Style Influence: {refinedData.styleInfluence}%
               </div>
+
+              {refinedData.personalization && (
+                <>
+                  <div className="field-label" style={{ marginTop: '0.5rem' }}>v5.5 개인화 추천 (Voices · Custom Models · My Taste)</div>
+                  <div className="output-area">{refinedData.personalization}</div>
+                </>
+              )}
             </div>
           )}
 

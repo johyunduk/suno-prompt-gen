@@ -58,8 +58,12 @@ export default function Builder() {
   }, []);
 
   // 저장 항목 불러오기 — 빌더 상태를 교체하고, 저장된 권장 설정이 있으면 정제 결과까지 복원한다.
+  // loadPrompt를 구조분해해 메서드 호출(style.loadPrompt())이 아닌 일반 함수 호출로 만든다.
+  // exhaustive-deps는 메서드 호출 시 수신 객체 전체(매 렌더 새로 생기는 style)를 deps로 요구하므로,
+  // 안정적인 loadPrompt(useStyleBuilder의 useCallback) 하나만 의존하도록 좁힌다.
+  const { loadPrompt } = style;
   const handleLoadSaved = useCallback((data) => {
-    style.loadPrompt(data);
+    loadPrompt(data);
     if (data?.advanced) {
       setRefined({
         source: JSON.stringify(payloadAfterLoad(data)),
@@ -68,7 +72,7 @@ export default function Builder() {
     } else {
       setRefined({ source: '', data: null });
     }
-  }, [style.loadPrompt]);
+  }, [loadPrompt]);
 
   const handleGenerateLyrics = useCallback(async () => {
     if (style.isInstrumental) return;

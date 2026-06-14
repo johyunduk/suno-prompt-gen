@@ -204,11 +204,13 @@ export function useStyleBuilder() {
   const presets = STYLE_PRESETS;
 
   const handleRandom = useCallback(() => {
-    setSelected(sanitizeSelection(generateRandomTags()));
+    const randomTags = sanitizeSelection(generateRandomTags());
+    setSelected(randomTags);
     setActivePreset(null);
     setInstrumental(false);
     setAdvancedOpen(false);
-    setExpandedGroups(Object.fromEntries(TAG_GROUPS.map(g => [g.id, true])));
+    // 기본 펼침 상태에 랜덤으로 선택된 그룹만 추가로 펼친다(상세를 열어도 빈 그룹은 접힌 채).
+    setExpandedGroups(openGroupsForTags(makeDefaultExpandedGroups(), randomTags));
   }, []);
 
   const handleReset = useCallback(() => {

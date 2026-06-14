@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { scrollIntoViewA11y } from './lib/scroll';
 import Hero from './components/Hero';
 import Nav from './components/Nav';
 import Basics from './components/sections/Basics';
@@ -22,7 +23,7 @@ function App() {
 
   const handleNav = (id) => {
     setActive(id);
-    document.getElementById('main')?.scrollIntoView({ behavior: 'smooth' });
+    scrollIntoViewA11y(document.getElementById('main'));
   };
 
   const Section = SECTIONS[active];

@@ -58,7 +58,16 @@ export default function ImageAnalyzer({ onApplyTags }) {
       {!imagePreview ? (
         <div
           className={`image-dropzone ${isDragging ? 'image-dropzone--dragging' : ''}`}
+          role="button"
+          tabIndex={0}
+          aria-label="이미지 업로드 — 클릭하거나 이미지를 드래그하세요"
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleImageDrop}

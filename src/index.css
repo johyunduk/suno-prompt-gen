@@ -227,7 +227,7 @@ nav::-webkit-scrollbar { display: none; }
   font-family: 'Space Mono', monospace;
   font-size: 0.6rem;
   letter-spacing: 0.2em;
-  color: #666;
+  color: #999;
   text-transform: uppercase;
 }
 .field-input {
@@ -739,6 +739,8 @@ nav::-webkit-scrollbar { display: none; }
 .api-key-box .field-input { flex: 1; }
 .lyrics-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .alert-error { background: #1a0a0a; border: 1px solid #5a1a1a; color: #ff6b6b; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.8rem; margin-top: 0.75rem; font-family: 'Space Mono', monospace; }
+/* 소프트 충돌 — 의도적으로 허용된 조합이므로 오류(빨강)가 아닌 주의(앰버)로 표시 */
+.alert-warning { background: #161000; border: 1px solid #4a3a12; color: var(--gold2); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.8rem; margin-top: 0.75rem; font-family: 'Space Mono', monospace; line-height: 1.6; }
 .output-area--lyrics { white-space: pre-wrap; font-size: 0.8rem; color: #ccc; max-height: 600px; overflow-y: auto; line-height: 1.7; }
 
 /* IMAGE ANALYSIS */
@@ -761,7 +763,7 @@ nav::-webkit-scrollbar { display: none; }
 
 /* AI 스타일 정제 */
 .refine-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem; }
-.refine-hint { font-size: 0.72rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+.refine-hint { font-size: 0.72rem; color: #8a8a8a; font-family: 'Space Mono', monospace; }
 .refined-box {
   border: 1px solid var(--gold);
   border-radius: 6px;
@@ -783,3 +785,37 @@ nav::-webkit-scrollbar { display: none; }
   border-color: #3a2e08;
   color: var(--white);
 }
+
+/* ─────────────── ACCESSIBILITY ─────────────── */
+/* 키보드 포커스 링 — 마우스 클릭에는 나타나지 않고 키보드 탐색에만 표시 */
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* 마우스 포커스에는 outline 제거 (focus-visible로 일원화) */
+button:focus:not(:focus-visible) { outline: none; }
+
+/* 비활성 버튼 — 상태가 보이도록 흐리게 + 커서 차단, hover 효과 무력화 */
+button:disabled, .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary:disabled:hover { background: var(--gold); transform: none; }
+.copy-btn:disabled:hover { border-color: #333; color: #888; }
+
+/* 터치 입력이 가능한 기기면 탭 영역 확대.
+   any-pointer:coarse는 주 포인터가 마우스인 터치 노트북(하이브리드)도 포함한다. */
+@media (any-pointer: coarse) {
+  .tag, .copy-btn, .tag-select-all-btn, .structure-tab, .structure-category-tab {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav-tab { min-height: 44px; }
+  .group-header { min-height: 40px; }
+}
+
+/* 동작 감소 설정 — 자동 스크롤을 즉시 이동으로.
+   html의 scroll-behavior도 함께 auto여야 scrollIntoView({behavior:'auto'})가
+   CSS smooth로 되돌아가지 않는다(lib/scroll.js와 짝). */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* sticky 내비게이션이 결과 제목을 가리지 않도록 스크롤 도착 지점에 여백 확보 */
+.refined-box { scroll-margin-top: 72px; }

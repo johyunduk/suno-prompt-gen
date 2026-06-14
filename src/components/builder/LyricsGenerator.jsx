@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { TEMPLATES, TEMPLATE_CATEGORIES } from '../../data/structures';
 import { DURATION_OPTIONS } from '../../data/tags';
 import { LANG_OPTIONS, buildInstrumentalStructure } from '../../hooks/useLyricsForm';
 import CopyButton from '../ui/CopyButton';
+import { scrollIntoViewA11y } from '../../lib/scroll';
 
 // 가사 생성 폼 + 생성 결과 표시. 프롬프트 빌드/생성은 컨테이너가 담당한다.
 export default function LyricsGenerator({
@@ -18,6 +19,13 @@ export default function LyricsGenerator({
 }) {
   const [showPromptPreview, setShowPromptPreview] = useState(false);
   const lyricsPrompt = form.buildPrompt(stylePrompt, styleHints);
+  const resultRef = useRef(null);
+
+  // 가사 생성이 끝나면 결과 영역으로 자동 스크롤한다.
+  // (위쪽 '가사 바로 생성'으로 만들면 결과가 페이지 하단에 떠서 놓치기 쉬움)
+  useEffect(() => {
+    if (generatedLyrics) scrollIntoViewA11y(resultRef.current, 'start');
+  }, [generatedLyrics]);
 
   const durationField = (
     <div className="field-group">
@@ -146,6 +154,7 @@ export default function LyricsGenerator({
             <div className="output-header">
               <button
                 className="field-label prompt-preview-toggle"
+                aria-expanded={showPromptPreview}
                 onClick={() => setShowPromptPreview(v => !v)}
               >
                 프롬프트 미리보기 {showPromptPreview ? '▲' : '▼'}
@@ -168,7 +177,7 @@ export default function LyricsGenerator({
       {/* ── Generated Lyrics ── */}
       {error && <div className="alert-error">⚠️ {error}</div>}
       {(loading || generatedLyrics) && (
-        <div className="prompt-box" style={{ marginTop: '1.5rem' }}>
+        <div className="prompt-box" style={{ marginTop: '1.5rem', scrollMarginTop: '72px' }} ref={resultRef}>
           <div className="prompt-header">
             <span>생성된 가사</span>
             {generatedLyrics && <CopyButton text={generatedLyrics} label="가사 복사" />}

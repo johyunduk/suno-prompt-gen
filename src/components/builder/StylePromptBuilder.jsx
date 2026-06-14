@@ -5,8 +5,13 @@ import { makeEntryData } from '../../lib/promptStorage';
 import CopyButton from '../ui/CopyButton';
 import VocalCasting from '../VocalCasting';
 import ImageAnalyzer from './ImageAnalyzer';
+import { scrollIntoViewA11y } from '../../lib/scroll';
 
 const VOCAL_GENDER_LABELS = { female: '여성', male: '남성', any: '무관 (Auto)' };
+
+// 권장 Advanced Options를 화면 표시·복사에 동일하게 쓰는 단일 문자열로 만든다.
+const formatAdvanced = (d) =>
+  `보컬 성별: ${VOCAL_GENDER_LABELS[d.vocalGender] ?? d.vocalGender} · Weirdness: ${d.weirdness}% · Style Influence: ${d.styleInfluence}%`;
 
 function encodeToURL(prompt, exclude, instrumental, advanced) {
   const params = new URLSearchParams({ p: prompt });
@@ -36,8 +41,19 @@ export default function StylePromptBuilder({
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [shareMsg, setShareMsg] = useState('');
   const shareTimerRef = useRef(null);
+  const refinedBoxRef = useRef(null);
+  // 초기값을 현재 prop으로 seed해 둔다 → 최초 렌더·공유 URL 복원·StrictMode 재마운트에서는
+  // "없다가 생긴" 전이로 잡히지 않아 스크롤하지 않는다.
+  const prevRefinedRef = useRef(refinedData);
 
   useEffect(() => () => clearTimeout(shareTimerRef.current), []);
+
+  // refinedData가 없다가 새로 생긴 경우(=사용자가 방금 정제)에만 결과 박스로 스크롤한다.
+  useEffect(() => {
+    const appeared = !prevRefinedRef.current && !!refinedData;
+    prevRefinedRef.current = refinedData;
+    if (appeared) scrollIntoViewA11y(refinedBoxRef.current, 'nearest');
+  }, [refinedData]);
 
   const handleShare = async () => {
     if (!effectiveStyle) return;
@@ -137,7 +153,11 @@ export default function StylePromptBuilder({
           return (
             <div key={group.id} className="field-group">
               <div className="group-header-row">
-                <button className="group-header" onClick={() => style.toggleGroup(group.id)}>
+                <button
+                  className="group-header"
+                  aria-expanded={!!style.expandedGroups[group.id]}
+                  onClick={() => style.toggleGroup(group.id)}
+                >
                   <span className="field-label">
                     {group.label}
                     {GROUP_LIMITS[group.id] && (
@@ -181,7 +201,7 @@ export default function StylePromptBuilder({
         })}
 
         {style.softConflicts.length > 0 && (
-          <div className="alert-error">
+          <div className="alert-warning">
             {style.softConflicts.map(c => (
               <div key={`${c.a}-${c.b}`}>⚠️ {c.message}</div>
             ))}
@@ -278,30 +298,37 @@ export default function StylePromptBuilder({
           {refineError && <div className="alert-error">⚠️ {refineError}</div>}
 
           {refinedData && (
-            <div className="refined-box">
+            <div className="refined-box" ref={refinedBoxRef}>
               <div className="refined-box__label">✨ AI가 다듬은 결과 — Suno 입력란별로 나눠 붙여넣으세요</div>
 
-              <div className="field-label" style={{ marginTop: '0.5rem' }}>Style of Music</div>
+              <div className="output-header" style={{ marginTop: '0.5rem' }}>
+                <div className="field-label">Style of Music</div>
+                <CopyButton text={refinedData.stylePrompt} label="복사" />
+              </div>
               <div className="output-area output-area--refined">{refinedData.stylePrompt}</div>
 
               {refinedData.exclude && (
                 <>
-                  <div className="field-label" style={{ marginTop: '0.5rem' }}>Exclude Styles (Advanced Options)</div>
+                  <div className="output-header" style={{ marginTop: '0.5rem' }}>
+                    <div className="field-label">Exclude Styles (Advanced Options)</div>
+                    <CopyButton text={refinedData.exclude} label="복사" />
+                  </div>
                   <div className="output-area output-area--refined">{refinedData.exclude}</div>
-                  <CopyButton text={refinedData.exclude} label="Exclude 복사" />
                 </>
               )}
 
-              <div className="field-label" style={{ marginTop: '0.5rem' }}>권장 Advanced Options 설정</div>
-              <div className="output-area">
-                보컬 성별: {VOCAL_GENDER_LABELS[refinedData.vocalGender] ?? refinedData.vocalGender}
-                {' · '}Weirdness: {refinedData.weirdness}%
-                {' · '}Style Influence: {refinedData.styleInfluence}%
+              <div className="output-header" style={{ marginTop: '0.5rem' }}>
+                <div className="field-label">권장 Advanced Options 설정</div>
+                <CopyButton text={formatAdvanced(refinedData)} label="설정 복사" />
               </div>
+              <div className="output-area">{formatAdvanced(refinedData)}</div>
 
               {refinedData.personalization && (
                 <>
-                  <div className="field-label" style={{ marginTop: '0.5rem' }}>v5.5 개인화 추천 (Voices · Custom Models · My Taste)</div>
+                  <div className="output-header" style={{ marginTop: '0.5rem' }}>
+                    <div className="field-label">v5.5 개인화 추천 (Voices · Custom Models · My Taste)</div>
+                    <CopyButton text={refinedData.personalization} label="추천 복사" />
+                  </div>
                   <div className="output-area">{refinedData.personalization}</div>
                 </>
               )}

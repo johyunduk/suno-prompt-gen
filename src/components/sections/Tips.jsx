@@ -29,6 +29,7 @@ export default function Tips() {
           <button
             key={i}
             className={`tip-item ${open === i ? 'tip-item--open' : ''}`}
+            aria-expanded={open === i}
             onClick={() => setOpen(open === i ? null : i)}
           >
             <div className="tip-icon">{tip.icon}</div>

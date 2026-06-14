@@ -38,8 +38,15 @@ function loadPresetUsage() {
   try { return JSON.parse(localStorage.getItem(PRESET_USAGE_KEY) || '{}'); } catch { return {}; }
 }
 
-function sortPresetsByUsage(presets, usage) {
-  return [...presets].sort((a, b) => (usage[b.id] ?? 0) - (usage[a.id] ?? 0));
+// 프리셋 사용 '횟수'를 localStorage에 누적한다 — 자주 사용한 프리셋 빈도 통계용.
+// ('최근 사용' 순서가 필요하면 lastUsedAt/최근 ID 배열을 별도로 기록해야 한다.)
+// 목록 정렬에는 더 이상 쓰지 않으므로 React 상태로 들고 있지 않는다.
+function bumpPresetUsage(presetId) {
+  try {
+    const usage = loadPresetUsage();
+    usage[presetId] = (usage[presetId] ?? 0) + 1;
+    localStorage.setItem(PRESET_USAGE_KEY, JSON.stringify(usage));
+  } catch { /* localStorage 사용 불가 환경은 무시 */ }
 }
 
 function openGroupsForTags(prev, tagMap) {
@@ -52,7 +59,6 @@ function openGroupsForTags(prev, tagMap) {
 export function useStyleBuilder() {
   const [selected, setSelected] = useState({});
   const [activePreset, setActivePreset] = useState(null);
-  const [presetUsage, setPresetUsage] = useState(loadPresetUsage);
   // URL 공유로 들어온 경우 ?p=(스타일) ?x=(제외) ?inst=(인스트루멘탈) ?vg/?wd/?si=(권장 설정)을 초기값으로 사용한다.
   // 구버전 URL은 inst 파라미터가 없으므로 p 안의 토큰 파싱으로 보완한다.
   const [initialShared] = useState(() => {
@@ -176,17 +182,12 @@ export function useStyleBuilder() {
     if (preset.structure && TEMPLATES[preset.structure]) {
       setPresetStructure({ category: TEMPLATES[preset.structure].category, structure: preset.structure });
     }
-    setPresetUsage(prev => {
-      const next = { ...prev, [preset.id]: (prev[preset.id] ?? 0) + 1 };
-      localStorage.setItem(PRESET_USAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+    bumpPresetUsage(preset.id);
   }, []);
 
-  const sortedPresets = useMemo(
-    () => sortPresetsByUsage(STYLE_PRESETS, presetUsage),
-    [presetUsage]
-  );
+  // 프리셋 목록은 선언 순서로 고정한다 — 선택해도 카드 위치가 바뀌지 않아 위치 기억을 해치지 않는다.
+  // (자주 사용/최근 사용 영역은 추후 점진적 노출 작업과 함께 별도 추가)
+  const presets = STYLE_PRESETS;
 
   const handleRandom = useCallback(() => {
     setSelected(sanitizeSelection(generateRandomTags()));
@@ -231,7 +232,7 @@ export function useStyleBuilder() {
   return {
     selected, custom, setCustom, vocalPrompt, setVocalPrompt, vocalResetKey,
     shared: initialShared,
-    expandedGroups, activePreset, prompt, totalSelected, sortedPresets, presetStructure, styleHints,
+    expandedGroups, activePreset, prompt, totalSelected, presets, presetStructure, styleHints,
     isInstrumental: instrumental, setInstrumental,
     excludeTags, excludeCustom, setExcludeCustom, toggleExclude, excludePrompt,
     refinePayload, canRefine, softConflicts,

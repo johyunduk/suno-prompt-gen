@@ -112,7 +112,7 @@ export default function StylePromptBuilder({
           )}
         </div>
         <div className="preset-scroll">
-          {style.sortedPresets.map(preset => (
+          {style.presets.map(preset => (
             <button
               key={preset.id}
               className={`preset-card ${style.activePreset === preset.id ? 'preset-card--active' : ''}`}

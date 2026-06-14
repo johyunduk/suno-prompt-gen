@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { payloadAfterLoad } from '../../lib/promptStorage';
+import { scrollIntoViewA11y } from '../../lib/scroll';
 import { usePromptStorage } from '../../hooks/usePromptStorage';
 import { useGemini } from '../../hooks/useGemini';
 import { useStyleRefine } from '../../hooks/useStyleRefine';
@@ -28,6 +29,8 @@ export default function Builder() {
     };
   });
   const [generatedLyrics, setGeneratedLyrics] = useState('');
+  // 정제 성공 시에만 증가 — 자식의 결과 스크롤이 첫 정제·재정제를 모두 감지하게 한다.
+  const [refineTick, setRefineTick] = useState(0);
 
   // payload 전체를 키로 사용해 태그/직접입력/제외/인스트루멘탈 어떤 변화든 캐시를 무효화한다.
   const refineKey = JSON.stringify(style.refinePayload);
@@ -39,8 +42,20 @@ export default function Builder() {
   const handleRefine = useCallback(async () => {
     if (!style.canRefine) return;
     const result = await refine(style.refinePayload);
-    if (result) setRefined({ source: refineKey, data: result });
+    if (result) {
+      setRefined({ source: refineKey, data: result });
+      setRefineTick(t => t + 1);
+    }
   }, [refine, style.refinePayload, style.canRefine, refineKey]);
+
+  // '다음: 가사 설정' — 아래 가사 빌더 영역으로 스크롤하고 포커스도 옮긴다.
+  // (스크롤만 하면 키보드 사용자의 Tab이 위쪽 컨트롤로 가므로 focus까지 이동.
+  //  preventScroll로 scrollIntoViewA11y의 부드러운 스크롤과 중복되지 않게 한다.)
+  const goToLyrics = useCallback(() => {
+    const el = document.getElementById('lyrics-builder');
+    scrollIntoViewA11y(el);
+    el?.focus({ preventScroll: true });
+  }, []);
 
   // 저장 항목 불러오기 — 빌더 상태를 교체하고, 저장된 권장 설정이 있으면 정제 결과까지 복원한다.
   const handleLoadSaved = useCallback((data) => {
@@ -74,9 +89,11 @@ export default function Builder() {
         refining={refining}
         refineError={refineError}
         onRefine={handleRefine}
+        refineTick={refineTick}
         effectiveStyle={effectiveStyle}
         effectiveExclude={effectiveExclude}
         onGenerateLyrics={handleGenerateLyrics}
+        onGoToLyrics={goToLyrics}
         lyricsLoading={loading}
       />
 

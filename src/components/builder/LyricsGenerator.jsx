@@ -71,7 +71,7 @@ export default function LyricsGenerator({
 
   return (
     <>
-      <div className="section-label" style={{ marginBottom: '0.75rem' }}>가사 생성</div>
+      <div className="section-label" id="lyrics-builder" tabIndex={-1} style={{ marginBottom: '0.75rem', scrollMarginTop: '72px' }}>가사 생성</div>
       <div className="info-block">
         아래 조건을 설정하고 <strong>가사 생성</strong> 버튼을 누르세요. 프롬프트만 필요하면 미리보기를 복사하세요.
       </div>

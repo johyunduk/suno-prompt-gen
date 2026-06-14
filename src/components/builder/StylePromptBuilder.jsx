@@ -32,9 +32,11 @@ export default function StylePromptBuilder({
   refining,
   refineError,
   onRefine,
+  refineTick,
   effectiveStyle,
   effectiveExclude,
   onGenerateLyrics,
+  onGoToLyrics,
   lyricsLoading,
 }) {
   const [saveName, setSaveName] = useState('');
@@ -42,18 +44,15 @@ export default function StylePromptBuilder({
   const [shareMsg, setShareMsg] = useState('');
   const shareTimerRef = useRef(null);
   const refinedBoxRef = useRef(null);
-  // 초기값을 현재 prop으로 seed해 둔다 → 최초 렌더·공유 URL 복원·StrictMode 재마운트에서는
-  // "없다가 생긴" 전이로 잡히지 않아 스크롤하지 않는다.
-  const prevRefinedRef = useRef(refinedData);
 
   useEffect(() => () => clearTimeout(shareTimerRef.current), []);
 
-  // refinedData가 없다가 새로 생긴 경우(=사용자가 방금 정제)에만 결과 박스로 스크롤한다.
+  // 정제가 완료될 때마다(첫 정제·재정제 모두) 결과 박스를 화면 안으로 가져온다.
+  // refineTick은 사용자의 정제 성공 시에만 증가 → 최초 렌더·공유 URL 복원·
+  // StrictMode 재마운트(tick=0)에서는 스크롤하지 않는다.
   useEffect(() => {
-    const appeared = !prevRefinedRef.current && !!refinedData;
-    prevRefinedRef.current = refinedData;
-    if (appeared) scrollIntoViewA11y(refinedBoxRef.current, 'nearest');
-  }, [refinedData]);
+    if (refineTick > 0) scrollIntoViewA11y(refinedBoxRef.current, 'nearest');
+  }, [refineTick]);
 
   const handleShare = async () => {
     if (!effectiveStyle) return;
@@ -341,13 +340,21 @@ export default function StylePromptBuilder({
                 🎹 보컬 없음(인스트루멘탈)이 선택되어 가사 대신 아래 <strong>인스트루멘탈 구조</strong> 섹션의 구조 프롬프트를 사용하세요.
               </span>
             ) : (
-              <button
-                className="btn btn-primary"
-                onClick={onGenerateLyrics}
-                disabled={lyricsLoading || !effectiveStyle}
-              >
-                {lyricsLoading ? '⏳ 가사 생성 중...' : '✨ 가사 바로 생성'}
-              </button>
+              <>
+                <button
+                  className="btn btn-primary"
+                  onClick={onGoToLyrics}
+                >
+                  다음: 가사 설정 →
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={onGenerateLyrics}
+                  disabled={lyricsLoading || !effectiveStyle}
+                >
+                  {lyricsLoading ? '⏳ 가사 생성 중...' : '현재 설정으로 바로 생성'}
+                </button>
+              </>
             )}
             <CopyButton
               text={effectiveStyle}

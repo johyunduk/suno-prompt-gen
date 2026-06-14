@@ -795,6 +795,7 @@ button:focus:not(:focus-visible) { outline: none; }
 /* 비활성 버튼 — 상태가 보이도록 흐리게 + 커서 차단, hover 효과 무력화 */
 button:disabled, .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-primary:disabled:hover { background: var(--gold); transform: none; }
+.btn-outline:disabled:hover { border-color: #444; color: var(--white); }
 .copy-btn:disabled:hover { border-color: #333; color: #888; }
 
 /* 터치 입력이 가능한 기기면 탭 영역 확대.

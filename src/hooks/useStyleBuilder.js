@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback } from 'react';
-import { TAG_GROUPS } from '../data/tags';
+import { TAG_GROUPS, CORE_GROUP_IDS } from '../data/tags';
 import { TEMPLATES } from '../data/structures';
 import { STYLE_PRESETS } from '../data/presets';
 import { INSTRUMENTAL_TOKEN, extractInstrumental } from '../lib/instrumental';
 import { entryToBuilderState } from '../lib/promptStorage';
 import { applyTagToggle, sanitizeSelection, findSoftConflicts } from '../lib/tagRules';
+import { countAdvancedTags, countActiveExtras } from '../lib/builderSummary';
 
 const PRESET_USAGE_KEY = 'suno_preset_usage';
 // 인스트루멘탈이면 프롬프트에서 제외할 보컬 관련 태그 그룹.
@@ -55,10 +56,17 @@ function openGroupsForTags(prev, tagMap) {
   return updated;
 }
 
+// 기본 펼침 상태 — 핵심 그룹(장르·분위기)만 펼치고 나머지는 접는다.
+function makeDefaultExpandedGroups() {
+  return Object.fromEntries(TAG_GROUPS.map(g => [g.id, CORE_GROUP_IDS.has(g.id)]));
+}
+
 // 스타일 프롬프트 빌더의 상태와 동작을 한곳에 모은 훅.
 export function useStyleBuilder() {
   const [selected, setSelected] = useState({});
   const [activePreset, setActivePreset] = useState(null);
+  // '상세 설정' 영역 전체 펼침 여부(점진적 노출). 저장/공유에는 포함하지 않는다.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   // URL 공유로 들어온 경우 ?p=(스타일) ?x=(제외) ?inst=(인스트루멘탈) ?vg/?wd/?si=(권장 설정)을 초기값으로 사용한다.
   // 구버전 URL은 inst 파라미터가 없으므로 p 안의 토큰 파싱으로 보완한다.
   const [initialShared] = useState(() => {
@@ -84,9 +92,7 @@ export function useStyleBuilder() {
   const [vocalPrompt, setVocalPrompt] = useState('');
   // VocalCasting은 내부 상태를 갖는 컴포넌트라 초기화/불러오기 시 key로 리마운트한다.
   const [vocalResetKey, setVocalResetKey] = useState(0);
-  const [expandedGroups, setExpandedGroups] = useState(
-    () => Object.fromEntries(TAG_GROUPS.map((g, i) => [g.id, i < 2]))
-  );
+  const [expandedGroups, setExpandedGroups] = useState(makeDefaultExpandedGroups);
   // 프리셋이 추천하는 곡 구조 — 가사 폼에서 동기화한다.
   const [presetStructure, setPresetStructure] = useState(null);
 
@@ -141,6 +147,14 @@ export function useStyleBuilder() {
   // 소프트 충돌(의도된 대비일 수 있는 조합)은 자동 해제하지 않고 경고만 띄운다.
   const softConflicts = useMemo(() => findSoftConflicts(selected), [selected]);
 
+  // '상세 설정' 토글 요약 — 상세 그룹 선택 수 / 직접 설정 활성 카테고리 수.
+  const advancedTagCount = useMemo(() => countAdvancedTags(selected, instrumental), [selected, instrumental]);
+  const extraSettingsCount = useMemo(
+    () => countActiveExtras({ vocalPrompt, custom, excludePrompt, instrumental }),
+    [vocalPrompt, custom, excludePrompt, instrumental]
+  );
+  const toggleAdvanced = useCallback(() => setAdvancedOpen(v => !v), []);
+
   // 가사 생성 시 무드/장르를 한국어로 따로 강조하기 위한 힌트.
   const styleHints = useMemo(() => ({
     genre: (selected.genre ?? []).map(v => LABEL_BY_VALUE.genre?.[v] ?? v),
@@ -193,6 +207,7 @@ export function useStyleBuilder() {
     setSelected(sanitizeSelection(generateRandomTags()));
     setActivePreset(null);
     setInstrumental(false);
+    setAdvancedOpen(false);
     setExpandedGroups(Object.fromEntries(TAG_GROUPS.map(g => [g.id, true])));
   }, []);
 
@@ -201,6 +216,8 @@ export function useStyleBuilder() {
     setCustom('');
     setActivePreset(null);
     setInstrumental(false);
+    setAdvancedOpen(false);
+    setExpandedGroups(makeDefaultExpandedGroups());
     setExcludeTags([]);
     setExcludeCustom('');
     setVocalPrompt('');
@@ -221,6 +238,8 @@ export function useStyleBuilder() {
     const state = entryToBuilderState(data);
     setSelected({});
     setActivePreset(null);
+    setAdvancedOpen(false);
+    setExpandedGroups(makeDefaultExpandedGroups());
     setVocalPrompt('');
     setVocalResetKey(k => k + 1);
     setCustom(state.custom);
@@ -233,6 +252,7 @@ export function useStyleBuilder() {
     selected, custom, setCustom, vocalPrompt, setVocalPrompt, vocalResetKey,
     shared: initialShared,
     expandedGroups, activePreset, prompt, totalSelected, presets, presetStructure, styleHints,
+    advancedOpen, toggleAdvanced, advancedTagCount, extraSettingsCount,
     isInstrumental: instrumental, setInstrumental,
     excludeTags, excludeCustom, setExcludeCustom, toggleExclude, excludePrompt,
     refinePayload, canRefine, softConflicts,

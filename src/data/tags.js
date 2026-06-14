@@ -295,6 +295,10 @@ export const TAG_GROUPS = [
   },
 ];
 
+// 점진적 노출 — 항상 노출하는 '핵심' 태그 그룹. 나머지는 '상세 설정'으로 접는다.
+// 렌더링(StylePromptBuilder)과 요약 집계(builderSummary)가 같은 정의를 쓰도록 여기서 export.
+export const CORE_GROUP_IDS = new Set(['genre', 'mood']);
+
 // 그룹별 최대 선택 수 — 초과 선택 시 가장 오래된 선택이 자동 해제된다.
 // (장르가 많으면 평균적인 소리가 되고, BPM/시대/보컬 구성은 동시에 둘일 수 없다)
 export const GROUP_LIMITS = {

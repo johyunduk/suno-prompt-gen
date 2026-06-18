@@ -170,6 +170,19 @@ export default function LyricsGenerator({
                 {loading ? '⏳ 생성 중...' : '✨ 가사 생성'}
               </button>
             </div>
+            <div className="external-ai-fallback">
+              <div>
+                <div className="external-ai-fallback__title">Gemini 한도 초과 시</div>
+                <div className="external-ai-fallback__desc">
+                  현재 스타일과 가사 설정이 포함된 요청문을 복사해 Claude, Codex 등 다른 AI에 붙여넣으세요.
+                </div>
+              </div>
+              <CopyButton
+                text={lyricsPrompt}
+                label="외부 AI용 프롬프트 복사"
+                className="external-ai-fallback__copy"
+              />
+            </div>
           </div>
         </div>
       </div>

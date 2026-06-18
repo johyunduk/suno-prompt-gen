@@ -773,6 +773,33 @@ nav::-webkit-scrollbar { display: none; }
 .api-key-box { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
 .api-key-box .field-input { flex: 1; }
 .lyrics-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.external-ai-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #2a2a2a;
+  background: #0a0a0a;
+}
+.external-ai-fallback__title {
+  margin-bottom: 0.2rem;
+  color: var(--gold2);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.external-ai-fallback__desc {
+  color: #8a8a8a;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.external-ai-fallback__copy { flex-shrink: 0; }
+@media (max-width: 600px) {
+  .external-ai-fallback { align-items: stretch; flex-direction: column; }
+  .external-ai-fallback__copy { width: 100%; }
+}
 .alert-error { background: #1a0a0a; border: 1px solid #5a1a1a; color: #ff6b6b; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.8rem; margin-top: 0.75rem; font-family: 'Space Mono', monospace; }
 /* 소프트 충돌 — 의도적으로 허용된 조합이므로 오류(빨강)가 아닌 주의(앰버)로 표시 */
 .alert-warning { background: #161000; border: 1px solid #4a3a12; color: var(--gold2); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.8rem; margin-top: 0.75rem; font-family: 'Space Mono', monospace; line-height: 1.6; }

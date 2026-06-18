@@ -6,6 +6,7 @@ import CopyButton from '../ui/CopyButton';
 import VocalCasting from '../VocalCasting';
 import ImageAnalyzer from './ImageAnalyzer';
 import { scrollIntoViewA11y } from '../../lib/scroll';
+import { buildExternalStyleRefinePrompt } from '../../lib/styleRefinePrompt';
 
 const VOCAL_GENDER_LABELS = { female: '여성', male: '남성', any: '무관 (Auto)' };
 
@@ -148,6 +149,9 @@ export default function StylePromptBuilder({
   if (style.advancedTagCount > 0) advParts.push(`상세 태그 ${style.advancedTagCount}`);
   if (style.extraSettingsCount > 0) advParts.push(`직접 설정 ${style.extraSettingsCount}`);
   const advBadge = advParts.join(' · ');
+  const externalRefinePrompt = style.canRefine
+    ? buildExternalStyleRefinePrompt(style.refinePayload)
+    : '';
 
   return (
     <div className="prompt-box">
@@ -323,6 +327,21 @@ export default function StylePromptBuilder({
                 : '장르·무드 등 스타일 태그를 하나 이상 선택하면 다듬을 수 있습니다.'}
             </span>
           </div>
+          {style.canRefine && (
+            <div className="external-ai-fallback">
+              <div>
+                <div className="external-ai-fallback__title">Gemini 한도 초과 시</div>
+                <div className="external-ai-fallback__desc">
+                  현재 태그를 Suno v5.5 스타일 프롬프트로 다듬는 요청문을 Claude, Codex 등에서 사용하세요.
+                </div>
+              </div>
+              <CopyButton
+                text={externalRefinePrompt}
+                label="스타일 정제 요청문 복사"
+                className="external-ai-fallback__copy"
+              />
+            </div>
+          )}
           {refineError && <div className="alert-error">⚠️ {refineError}</div>}
 
           {refinedData && (

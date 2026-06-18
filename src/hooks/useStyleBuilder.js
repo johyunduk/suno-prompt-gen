@@ -199,7 +199,7 @@ export function useStyleBuilder() {
     bumpPresetUsage(preset.id);
   }, []);
 
-  // 프리셋 목록은 선언 순서로 고정한다 — 선택해도 카드 위치가 바뀌지 않아 위치 기억을 해치지 않는다.
+  // 프리셋 목록은 데이터의 고정 큐레이션 순서를 쓴다 — 선택해도 카드 위치가 바뀌지 않는다.
   // (자주 사용/최근 사용 영역은 추후 점진적 노출 작업과 함께 별도 추가)
   const presets = STYLE_PRESETS;
 

@@ -1,7 +1,7 @@
 // 데이터 무결성 검사 — 프리셋 태그가 전부 tags.js(단일 원본)에 존재하는지 확인한다.
 // 사용: npm run check:data (build 전에 자동 실행됨)
 import { TAG_GROUPS, GROUP_LIMITS, CONFLICT_PAIRS } from '../src/data/tags.js';
-import { STYLE_PRESETS } from '../src/data/presets.js';
+import { STYLE_PRESETS, FEATURED_PRESET_IDS } from '../src/data/presets.js';
 import { TEMPLATES } from '../src/data/structures.js';
 
 let errors = 0;
@@ -49,6 +49,21 @@ for (const g of TAG_GROUPS) {
     if (seen.has(t.value)) fail(`태그 그룹 "${g.id}": 중복 값 "${t.value}"`);
     seen.add(t.value);
   }
+}
+
+// 6. FEATURED_PRESET_IDS 참조 무결성 — 카드 노출 순서를 결정하므로
+//    삭제된/오타 ID가 남거나 중복되면 의도한 순서와 실제 데이터가 어긋난다.
+const presetIds = new Set(STYLE_PRESETS.map(p => p.id));
+const featuredSeen = new Set();
+for (const id of FEATURED_PRESET_IDS) {
+  if (!presetIds.has(id)) fail(`FEATURED_PRESET_IDS: 존재하지 않는 프리셋 ID "${id}"`);
+  if (featuredSeen.has(id)) fail(`FEATURED_PRESET_IDS: 중복 ID "${id}"`);
+  featuredSeen.add(id);
+}
+// featured에 없는 프리셋은 목록 뒤로 밀려 의도치 않은 순서가 되므로 경고로 알린다.
+const notFeatured = [...presetIds].filter(id => !featuredSeen.has(id));
+if (notFeatured.length > 0) {
+  console.warn(`⚠ FEATURED_PRESET_IDS에 없는 프리셋 ${notFeatured.length}개(목록 뒤에 표시됨): ${notFeatured.join(', ')}`);
 }
 
 if (errors > 0) {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function CopyButton({ text, label = 'Copy', className = '' }) {
+export default function CopyButton({ text, label = 'Copy', className = '', disabled = false }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -13,6 +13,7 @@ export default function CopyButton({ text, label = 'Copy', className = '' }) {
   return (
     <button
       onClick={handleCopy}
+      disabled={disabled}
       className={`copy-btn ${copied ? 'copy-btn--copied' : ''} ${className}`}
     >
       {copied ? 'Copied!' : label}

@@ -7,6 +7,7 @@ import { useStyleRefine } from '../../hooks/useStyleRefine';
 import { useStyleBuilder } from '../../hooks/useStyleBuilder';
 import { useLyricsForm } from '../../hooks/useLyricsForm';
 import StylePromptBuilder from '../builder/StylePromptBuilder';
+import StyleResultPanel from '../builder/StyleResultPanel';
 import SavedPrompts from '../builder/SavedPrompts';
 import LyricsGenerator from '../builder/LyricsGenerator';
 
@@ -83,23 +84,32 @@ export default function Builder() {
 
   return (
     <div className="section-content">
-      <div className="section-label">Chapter 02</div>
-      <h2 className="section-title">프롬프트 빌더</h2>
+      <div className="section-label">Workspace</div>
+      <h2 className="section-title section-title--compact">프롬프트 빌더</h2>
 
-      <StylePromptBuilder
-        style={style}
-        storage={storage}
-        refinedData={refinedData}
-        refining={refining}
-        refineError={refineError}
-        onRefine={handleRefine}
-        refineTick={refineTick}
-        effectiveStyle={effectiveStyle}
-        effectiveExclude={effectiveExclude}
-        onGenerateLyrics={handleGenerateLyrics}
-        onGoToLyrics={goToLyrics}
-        lyricsLoading={loading}
-      />
+      {/* 입력 영역과 결과(스티키) 패널을 컨테이너가 2단으로 조율한다.
+          데스크톱에서는 결과 패널이 입력을 스크롤하는 동안 화면에 고정된다. */}
+      <div className="builder-layout">
+        <div className="builder-layout__inputs">
+          <StylePromptBuilder style={style} />
+        </div>
+        <aside className="builder-layout__results">
+          <StyleResultPanel
+            style={style}
+            storage={storage}
+            refinedData={refinedData}
+            refining={refining}
+            refineError={refineError}
+            onRefine={handleRefine}
+            refineTick={refineTick}
+            effectiveStyle={effectiveStyle}
+            effectiveExclude={effectiveExclude}
+            onGenerateLyrics={handleGenerateLyrics}
+            onGoToLyrics={goToLyrics}
+            lyricsLoading={loading}
+          />
+        </aside>
+      </div>
 
       <SavedPrompts saved={storage.saved} onRemove={storage.remove} onLoad={handleLoadSaved} />
 

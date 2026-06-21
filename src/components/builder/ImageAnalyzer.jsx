@@ -49,7 +49,7 @@ export default function ImageAnalyzer({ onApplyTags }) {
   return (
     <div className="image-analysis-section">
       <div className="preset-section-header">
-        <span className="field-label">🎨 캐릭터 이미지로 분석</span>
+        <span className="field-label">캐릭터 이미지로 분석</span>
         {imagePreview && (
           <button className="copy-btn" onClick={resetImage}>초기화</button>
         )}
@@ -88,7 +88,7 @@ export default function ImageAnalyzer({ onApplyTags }) {
           <img src={imagePreview} alt="업로드된 캐릭터" className="image-preview" />
           <div className="image-preview-actions">
             <button className="btn btn-primary" onClick={handleAnalyze} disabled={analyzing}>
-              {analyzing ? '⏳ 분석 중...' : '✨ 이미지 분석'}
+              {analyzing ? '분석 중…' : '이미지 분석'}
             </button>
           </div>
           {analyzeError && <div className="alert-error">⚠️ {analyzeError}</div>}

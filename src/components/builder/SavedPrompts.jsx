@@ -14,7 +14,7 @@ export default function SavedPrompts({ saved, onRemove, onLoad }) {
           <div key={item.id} className="saved-item">
             <div className="saved-name">
               {item.name}
-              {item.data.instrumental && ' · 🎹 인스트루멘탈'}
+              {item.data.instrumental && ' · 인스트루멘탈'}
             </div>
             <div className="saved-prompt">{item.data.stylePrompt}</div>
             {item.data.exclude && (

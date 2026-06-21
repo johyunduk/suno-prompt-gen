@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import './App.css';
 import { scrollIntoViewA11y } from './lib/scroll';
 import Hero from './components/Hero';
 import Nav from './components/Nav';
@@ -19,7 +20,7 @@ const SECTIONS = {
 };
 
 function App() {
-  const [active, setActive] = useState('basics');
+  const [active, setActive] = useState('builder');
 
   const handleNav = (id) => {
     setActive(id);
@@ -32,7 +33,7 @@ function App() {
     <>
       <Hero onNav={handleNav} />
       <Nav active={active} onNav={handleNav} />
-      <main className="main-content">
+      <main className={`main-content ${active === 'builder' ? 'main-content--wide' : ''}`}>
         <Section />
       </main>
       <div style={{ height: '6rem' }} />

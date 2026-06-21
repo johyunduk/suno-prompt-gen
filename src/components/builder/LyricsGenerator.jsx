@@ -167,7 +167,7 @@ export default function LyricsGenerator({
             )}
             <div className="lyrics-actions">
               <button className="btn btn-primary" onClick={onGenerate} disabled={loading}>
-                {loading ? '⏳ 생성 중...' : '✨ 가사 생성'}
+                {loading ? '생성 중…' : '가사 생성'}
               </button>
             </div>
             <div className="external-ai-fallback">
